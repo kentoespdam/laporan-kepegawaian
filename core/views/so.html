@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/gojs/release/go.js" defer></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/gojs/release/go-debug.js"></script>
+    <title>Struktur Organisasi</title>
+</head>
+
+<body class="m-2">
+    <main class="grid gap-2 w-full">
+        <div>
+            <div class="relative flex h-10 w-full min-w-[200px] max-w-[24rem]">
+                <button onclick="searchDiagram()"
+                    class="!absolute right-1 top-1 z-10 select-none rounded bg-blue-500 py-2 px-4 text-center align-middle font-sans text-xs font-bold uppercase text-white shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:shadow-blue-500/40 focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none peer-placeholder-shown:pointer-events-none peer-placeholder-shown:bg-blue-gray-500 peer-placeholder-shown:opacity-50 peer-placeholder-shown:shadow-none"
+                    type="button" data-ripple-light="true">Cari</button>
+                <input type="search" id="mySearch" onkeypress="if (event.keyCode === 13) searchDiagram()"
+                    placeholder=" "
+                    class="peer h-full w-full rounded-[7px] border border-blue-gray-200 bg-transparent px-3 py-2.5 pr-20 font-sans text-sm font-normal text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border placeholder-shown:border-blue-gray-200 placeholder-shown:border-t-blue-gray-200 focus:border-2 focus:border-blue-500 focus:border-t-transparent focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50" />
+                <label
+                    class="before:content[' '] after:content[' '] pointer-events-none absolute left-0 -top-1.5 flex h-full w-full select-none text-[11px] font-normal leading-tight text-blue-gray-400 transition-all before:pointer-events-none before:mt-[6.5px] before:mr-1 before:box-border before:block before:h-1.5 before:w-2.5 before:rounded-tl-md before:border-t before:border-l before:border-blue-gray-200 before:transition-all after:pointer-events-none after:mt-[6.5px] after:ml-1 after:box-border after:block after:h-1.5 after:w-2.5 after:flex-grow after:rounded-tr-md after:border-t after:border-r after:border-blue-gray-200 after:transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:leading-[3.75] peer-placeholder-shown:text-blue-gray-500 peer-placeholder-shown:before:border-transparent peer-placeholder-shown:after:border-transparent peer-focus:text-[11px] peer-focus:leading-tight peer-focus:text-blue-500 peer-focus:before:border-t-2 peer-focus:before:border-l-2 peer-focus:before:!border-blue-500 peer-focus:after:border-t-2 peer-focus:after:border-r-2 peer-focus:after:!border-blue-500 peer-disabled:text-transparent peer-disabled:before:border-transparent peer-disabled:after:border-transparent peer-disabled:peer-placeholder-shown:text-blue-gray-500">
+                    Jabatan
+                </label>
+            </div>
+        </div>
+        <div id="myDiagramDiv" class="w-full h-[700px] bg-gray-300"></div>
+        <div class="flex gap-2">
+            <button id="zoomToFit"
+                class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                Zoom to Fit
+            </button>
+            <button id="centerRoot"
+                class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                Center on root
+            </button>
+            <button id="download"
+                class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
+                Download Image
+            </button>
+        </div>
+    </main>
+
+    <script>
+        const nodeDataArray = '{{ data_so | tojson }}'
+        // function init() {
+        myDiagram = new go.Diagram('myDiagramDiv', {
+            allowCopy: false,
+            allowDelete: false,
+            initialAutoScale: go.AutoScale.UniformToFill,
+            initialDocumentSpot: go.Spot.Center,
+            initialViewportSpot: go.Spot.Center,
+            maxSelectionCount: 1, // users can select only one part at a time
+            validCycle: go.CycleMode.DestinationTree, // make sure users can only create trees
+            layout: new go.TreeLayout({
+                treeStyle: go.TreeLayout.StyleLastParents,
+                angle: 90,
+                layerSpacing: 80,
+                alternateAngle: 0,
+                alternateAlignment: go.TreeLayout.AlignmentStart,
+                alternateNodeIndent: 20,
+                alternateNodeIndentPastParent: 1,
+                alternateNodeSpacing: 20,
+                alternateLayerSpacing: 40,
+                alternateLayerSpacingParentOverlap: 1,
+                alternatePortSpot: new go.Spot(0.001, 1, 20, 0),
+                alternateChildPortSpot: go.Spot.Left
+            }),
+            'undoManager.isEnabled': true, // enable undo & redo
+        });
+
+        // // set up some colors/fonts for the default ('light') and dark Themes
+        myDiagram.themeManager.set('light', {
+            colors: {
+                background: '#fff',
+                text: '#111827',
+                textHighlight: '#11a8cd',
+                subtext: '#6b7280',
+                badge: '#f0fdf4',
+                badgeBorder: '#16a34a33',
+                badgeText: '#15803d',
+                divider: '#6b7280',
+                shadow: '#9ca3af',
+                tooltip: '#1f2937',
+                levels: [
+                    '#AC193D',
+                    '#2672EC',
+                    '#8C0095',
+                    '#5133AB',
+                    '#008299',
+                    '#D24726',
+                    '#008A00',
+                    '#094AB2'
+                ],
+                dragOver: '#f0f9ff',
+                link: '#9ca3af',
+                div: '#f3f4f6'
+            },
+            fonts: {
+                jabatan: "600 0.875rem InterVariable, sans-serif",
+                name: '500 0.875rem InterVariable, sans-serif',
+                normal: '0.875rem InterVariable, sans-serif',
+                badge: '500 0.75rem InterVariable, sans-serif',
+                link: '600 0.875rem InterVariable, sans-serif'
+            }
+        });
+
+        function theInfoTextConverter(info) {
+            var str = "\n";
+            if (info.name) str += "(" + info.name + ")";
+            if (info.nik) str += "\n" + info.nik;
+            return str;
+        }
+
+        // this is used to determine feedback during drags
+        function mayWorkFor(node1, node2) {
+            if (!(node1 instanceof go.Node)) return false; // must be a Node
+            if (node1 === node2) return false; // cannot work for yourself
+            if (node2.isInTreeOf(node1)) return false; // cannot work for someone who works for you
+            return true;
+        }
+
+        // Used to convert the node's tree level into a theme color
+        function findLevelColor(node) {
+            return node.findTreeLevel();
+        }
+
+        // define the Node template
+        myDiagram.nodeTemplate = new go.Node(go.Panel.Spot, {
+            isShadowed: true,
+            shadowOffset: new go.Point(0, 2),
+            selectionObjectName: 'BODY',
+        })
+            .add(
+                new go.Panel(go.Panel.Auto, { name: 'BODY' })
+                    .add(
+                        // define the node's outer shape
+                        new go.Shape('RoundedRectangle', {
+                            name: 'SHAPE',
+                            strokeWidth: 0,
+                            portId: '',
+                            spot1: go.Spot.TopLeft,
+                            spot2: go.Spot.BottomRight
+                        })
+                            .bindObject("fill", "isHighlighted", (h) => h ? "#80ffaa" : "background")
+                            .theme('fill', 'background'),
+                        new go.Panel(go.Panel.Table, { margin: 0.5, defaultRowSeparatorStrokeWidth: 0.5 })
+                            .theme('defaultRowSeparatorStroke', 'divider')
+                            .add(
+                                new go.Panel(go.Panel.Table, { padding: new go.Margin(18, 18, 18, 24) })
+                                    .addColumnDefinition(0, { width: 240 })
+                                    .add(
+                                        new go.Panel(go.Panel.Table, {
+                                            column: 0,
+                                            alignment: go.Spot.Center,
+                                            stretch: go.GraphObject.Horizontal,
+                                            // defaultAlignment: go.Spot.Left
+                                        })
+                                            .add(
+                                                new go.TextBlock({
+                                                    row: 0,
+                                                    column: 0,
+                                                    maxSize: new go.Size(250, NaN),
+                                                    margin: 2,
+                                                    textAlign: "center"
+                                                })
+                                                    .bindTwoWay('text', 'jabatan')
+                                                    .theme('stroke', 'text')
+                                                    .theme('font', 'jabatan'),
+                                            )
+                                            .add(
+                                                new go.TextBlock({
+                                                    row: 1,
+                                                    column: 0,
+                                                    textAlign: "center"
+                                                })
+                                                    .bindTwoWay('text', '', theInfoTextConverter)
+                                                    .theme('stroke', 'text')
+                                                    .theme('font', 'normal'),
+                                            ),
+                                    ),
+                            )
+                    ), // end Auto Panel
+                new go.Shape('RoundedLeftRectangle', {
+                    alignment: go.Spot.Left,
+                    alignmentFocus: go.Spot.Left,
+                    stretch: go.Stretch.Vertical,
+                    width: 6,
+                    strokeWidth: 0
+                }).themeObject('fill', '', 'levels', findLevelColor),
+            )
+            .theme('shadowColor', 'shadow')
+            // for sorting, have the Node.text be the data.name
+            .bind('text', 'name')
+            // bind the Part.layerName to control the Node's layer depending on whether it isSelected
+            .bindObject('layerName', 'isSelected', (sel) => (sel ? 'Foreground' : ''))
+            .bindTwoWay('isTreeExpanded');
+
+        // define the Link template
+        myDiagram.linkTemplate = new go.Link({
+            routing: go.Routing.Orthogonal,
+            layerName: 'Background',
+            corner: 5,
+            selectable: false
+        }).add(
+            new go.Shape({ strokeWidth: 3 })
+                .theme('stroke', 'link')
+        ); // the link shape
+
+
+
+        // read in the JSON-format data from the "mySavedModel" element
+        load();
+
+        // support editing the properties of the selected person in HTML
+        // myInspector = new Inspector('myInspector', myDiagram, {
+        //     properties: {
+        //         key: { readOnly: true },
+        //         // Don't show these temporary data values
+        //         EMAIL: { show: false },
+        //         PHONE: { show: false }
+        //     }
+        // });
+
+        // Setup zoom to fit button
+        document
+            .getElementById('zoomToFit')
+            .addEventListener('click', () => myDiagram.commandHandler.zoomToFit());
+
+        document.getElementById('centerRoot').addEventListener('click', () => {
+            myDiagram.scale = 1;
+            myDiagram.commandHandler.scrollToPart(myDiagram.findNodeForKey(1));
+        });
+
+
+        // } // end init
+
+        function searchDiagram() {
+            const input = document.getElementById("mySearch");
+            if (!input) return;
+            input.focus();
+
+            myDiagram.startTransaction("highlight search");
+
+            if (input.value) {
+                const regex = new RegExp(input.value, "i");
+                const results = myDiagram.findNodesByExample({ jabatan: regex },
+                    { nation: regex },
+                    { title: regex },
+                    { headOf: regex });
+                myDiagram.highlightCollection(results);
+                // console.log(collection)
+                myDiagram.selectCollection(results);
+                if (results.count > 0) myDiagram.centerRect(results.first().actualBounds);
+            } else {  // empty string only clears highlighteds collection
+                myDiagram.clearHighlighteds();
+            }
+
+            myDiagram.commitTransaction("highlight search");
+        }
+
+        // Show the diagram's model in JSON format
+        function save() {
+            document.getElementById('mySavedModel').value = myDiagram.model.toJson();
+            myDiagram.isModified = false;
+        }
+        function load() {
+            myDiagram.model = new go.TreeModel({
+                nodeParentKeyProperty: 'boss',
+                nodeDataArray: JSON.parse(nodeDataArray),
+            })
+        }
+
+        document.getElementById("download").addEventListener("click", () => {
+            myDiagram.makeImage({ scale: 1 }, "image/png", "myDiagram.png");
+        })
+
+        function blobCallback(blob) {
+            const url = window.URL.createObjectURL(blob)
+            const filename = "struktur-organisasi.png"
+            const a = document.createElement("a")
+            a.style.display = "none"
+            a.href = url
+            a.download = filename
+            document.body.appendChild(a)
+            a.click()
+            window.URL.revokeObjectURL(url)
+            document.body.removeChild(a)
+        }
+
+        function makeBlob() {
+            const blob = myDiagram.makeImageData({ scale: 0.5, returnType: 'blob', callback: blobCallback, size: new go.Size(2000, 2000) });
+        }
+
+        // window.addEventListener('DOMContentLoaded', () => {
+        //     setTimeout(() => {
+        //         init();
+        //     }, 300);
+        // });
+
+
+    </script>
+</body>
+
+</html>
