@@ -13,8 +13,8 @@ router = APIRouter(
 templates = Jinja2Templates(directory="core/views")
 
 
-@router.get("/", response_class=HTMLResponse)
-async def index(request: Request):
+@router.get()
+async def index():
     data_so = fetch_struktur_organisasi()
     if data_so.empty:
         return JSONResponse(content={}, status_code=404)
