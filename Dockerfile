@@ -4,8 +4,8 @@ WORKDIR /app
 FROM base AS builder
 WORKDIR /app
 COPY wheelhouse ./wheelhouse
-COPY requirements.txt .
-RUN pip install --no-cache-dir --find-links=wheelhouse --only-binary=:all: -r requirements.txt
+COPY requirement.txt .
+RUN pip install --no-cache-dir --find-links=wheelhouse --only-binary=:all: -r requirement.txt
 
 FROM base AS runner
 WORKDIR /app
