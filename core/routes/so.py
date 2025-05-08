@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 
 from core.model.so import fetch_struktur_organisasi
@@ -15,6 +15,14 @@ templates = Jinja2Templates(directory="core/views")
 
 @router.get("/", response_class=HTMLResponse)
 async def index(request: Request):
+    data_so = fetch_struktur_organisasi()
+    if data_so.empty:
+        return JSONResponse(content={}, status_code=404)
+    return JSONResponse(content=data_so.to_dict("records"), status_code=200)
+
+
+@router.get("/template", response_class=HTMLResponse)
+async def template(request: Request):
     data_so = fetch_struktur_organisasi()
     return templates.TemplateResponse(
         request=request,
