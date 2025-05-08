@@ -1,18 +1,18 @@
-FROM python:3.14.0a5-slim-bookworm AS base
+FROM python:3.12.9-slim-bookworm AS base
 WORKDIR /app
 
-# Install dependencies
 FROM base AS builder
 WORKDIR /app
-RUN apt update && apt install pkg-config build-essential -y
-RUN python3 -m venv .venv
-ENV PATH=".venv/bin:$PATH"
-RUN pip install "fastapi[standard]" openpyxl pymysql pymysql-pool pandas python-dotenv icecream swifter icecream jinja2 
+COPY wheelhouse ./wheelhouse
+COPY requirements.txt .
+RUN pip install --no-cache-dir --find-links=wheelhouse --only-binary=:all: -r requirements.txt
 
-# run app
 FROM base AS runner
 WORKDIR /app
-COPY --from=builder /app/.venv .venv
+COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
+COPY --from=builder /usr/local/bin /usr/local/bin
 COPY . .
-ENV PATH=".venv/bin:$PATH"
-CMD ["fastapi", "run", "main.py", "--port", "80"]
+RUN mkdir logs result_excel
+RUN touch logs/laporan.log
+RUN rm -rf wheelhouse
+CMD ["fastapi","run", "main.py", "--port", "80"]
