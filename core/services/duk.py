@@ -6,8 +6,7 @@ from core.excel_helper import cell_builder
 import pandas as pd
 from core.helper import hitung_sisa_bulan
 from core.model.duk import fetch_duk
-import io
-import swifter
+import swifter  # noqa: F401
 
 
 def duk_data():

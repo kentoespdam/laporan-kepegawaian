@@ -11,11 +11,11 @@ class STATUS_PEGAWAI(Enum):
 
 def get_status_pegawai_name(id):
     switcher = {
-        0: "Kontak",
+        0: "Pegawai Kontak",
         1: "Calon Pegawai",
         2: "Pegawai Tetap",
         3: "Calon Honorer Tetap",
-        4: "Honorer",
+        4: "Honorer Tetap",
         5: "Non Pegawai"
     }
     return switcher.get(id, "Invalid ID")

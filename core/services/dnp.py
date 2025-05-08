@@ -5,7 +5,7 @@ from core.excel_helper import cell_builder
 from core.helper import hitung_sisa_bulan
 from core.model.dnp import fetch_dnp
 import pandas as pd
-import swifter
+import swifter  # noqa: F401
 
 from core.model.organisasi import fetch_kode_nama_organisasi
 
