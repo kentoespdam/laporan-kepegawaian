@@ -1,0 +1,14 @@
+networks:
+  back-tier:
+    external: true
+    
+services:
+  laporan-kepegawaian:
+    container_name: laporan-kepegawaian
+    build: .
+    ports:
+      - "82:80"
+    env_file:
+      - .env
+    networks:
+      - back-tier
