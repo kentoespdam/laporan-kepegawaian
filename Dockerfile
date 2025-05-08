@@ -5,7 +5,7 @@ WORKDIR /app
 FROM base AS builder
 WORKDIR /app
 RUN apt update && apt install pkg-config build-essential -y
-RUN python -m venv .venv
+RUN python3 -m venv .venv
 ENV PATH=".venv/bin:$PATH"
 RUN "fastapi[standard]" openpyxl pymysql pymysql-pool pandas python-dotenv icecream swifter icecream jinja2 
 
