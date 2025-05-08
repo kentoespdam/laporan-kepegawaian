@@ -1,5 +1,5 @@
 networks:
-  back-tier:
+  kepegawaian_default:
     external: true
     
 services:
@@ -11,4 +11,4 @@ services:
     env_file:
       - .env
     networks:
-      - back-tier
+      - kepegawaian_default
