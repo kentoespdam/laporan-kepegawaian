@@ -23,6 +23,5 @@
 FROM python:3.12.3-slim-bookworm
 WORKDIR /app
 COPY . .
-COPY ./.venv .venv
 ENV PATH=".venv/bin:$PATH"
 CMD ["fastapi", "run", "main.py", "--host", "0.0.0.0", "--port", "80"]
