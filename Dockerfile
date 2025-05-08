@@ -8,7 +8,7 @@ RUN apt update && apt install pkg-config build-essential -y
 RUN python -m venv .venv
 ENV PATH=".venv/bin:$PATH"
 COPY requirements.txt .
-RUN pip install -r requirements.txt
+RUN pip install -r requirement.txt
 # RUN "fastapi[standard]" openpyxl pymysql pymysql-pool pandas python-dotenv icecream swifter icecream jinja2 
 
 # run app
