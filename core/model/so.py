@@ -1,26 +1,27 @@
 from core.config import get_connection_pool
 import pandas as pd
 
+from core.enums import STATUS_KERJA
+
 
 def fetch_struktur_organisasi():
     sql = """
         SELECT
-            jab.id AS `key`,
-            jab.parent_id AS boss,
-            jab.nama AS jabatan,
-            jab.level_id AS level,
-            bio.nama AS `name`,
-            peg.nipam AS nik 
+            jab.id,
+            IFNULL(jab.parent_id,0) AS parent_id,
+            jab.level_id AS `level`,
+            jab.nama AS nama_jabatan,
+            IFNULL(bio.nama, "") AS nama,
+            IFNULL(peg.nipam, "") AS nipam
         FROM
-            pegawai AS peg
-            INNER JOIN biodata AS bio ON peg.nik = bio.nik
-            INNER JOIN jabatan AS jab ON peg.jabatan_id = jab.id 
+            jabatan AS jab
+            LEFT JOIN pegawai AS peg ON jab.id = peg.jabatan_id AND status_kerja=%s
+            LEFT JOIN biodata AS bio ON peg.nik = bio.nik
         WHERE
-            peg.is_deleted = %s 
-            AND peg.status_kerja = %s 
-            AND jab.level_id < %s
+            jab.is_deleted = %s 
+            AND jab.level_id <= %s
     """
-    where = (False, 2, 7)
+    where = (STATUS_KERJA.KARYAWAN_AKTIF.value, False, 6)
     with get_connection_pool() as conn:
         with conn.cursor() as cursor:
             cursor.execute(sql, where)
