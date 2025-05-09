@@ -7,7 +7,7 @@ from core.enums import STATUS_KERJA
 def fetch_struktur_organisasi():
     sql = """
         SELECT
-            jab.id AS key,
+            jab.id AS `key`,
             IFNULL(jab.parent_id,0) AS boss,
             jab.level_id AS `level`,
             jab.nama AS jabatan,
