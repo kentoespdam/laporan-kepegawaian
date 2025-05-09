@@ -8,6 +8,7 @@ def fetch_struktur_organisasi():
             jab.id AS `key`,
             jab.parent_id AS boss,
             jab.nama AS jabatan,
+            jab.level_id AS level,
             bio.nama AS `name`,
             peg.nipam AS nik 
         FROM
