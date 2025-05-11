@@ -1,6 +1,5 @@
 import pandas as pd
-from icecream import ic
-
+import swifter  # noqa: F401
 from core.enums import get_status_pegawai_name
 from core.helper import get_agama
 from core.model.statistik import (

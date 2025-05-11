@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- <script src="https://cdn.jsdelivr.net/npm/gojs/release/go.js" defer></script> -->
-    <script src="https://cdn.jsdelivr.net/npm/gojs/release/go-debug.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/gojs/release/go-debug.js"></script> -->
+    <script src="http://127.0.0.1:8000/public/go.js?v=1"></script>
     <title>Struktur Organisasi</title>
 </head>
 
@@ -44,68 +45,32 @@
     </main>
 
     <script>
-        const nodeDataArray = '{{ data_so | tojson }}'
-        // function init() {
-        myDiagram = new go.Diagram('myDiagramDiv', {
-            allowCopy: false,
-            allowDelete: false,
-            initialAutoScale: go.AutoScale.UniformToFill,
-            initialDocumentSpot: go.Spot.Center,
-            initialViewportSpot: go.Spot.Center,
-            maxSelectionCount: 1, // users can select only one part at a time
-            validCycle: go.CycleMode.DestinationTree, // make sure users can only create trees
-            layout: new go.TreeLayout({
-                treeStyle: go.TreeLayout.StyleLastParents,
-                angle: 90,
-                layerSpacing: 80,
-                alternateAngle: 0,
-                alternateAlignment: go.TreeLayout.AlignmentStart,
-                alternateNodeIndent: 20,
-                alternateNodeIndentPastParent: 1,
-                alternateNodeSpacing: 20,
-                alternateLayerSpacing: 40,
-                alternateLayerSpacingParentOverlap: 1,
-                alternatePortSpot: new go.Spot(0.001, 1, 20, 0),
-                alternateChildPortSpot: go.Spot.Left
-            }),
-            'undoManager.isEnabled': true, // enable undo & redo
-        });
+        const nodeJson = '{{ data_so | tojson }}'
+        const nodeDataArray = JSON.parse(nodeJson)
+        const $ = go.GraphObject.make;  // for conciseness in defining templates
 
-        // // set up some colors/fonts for the default ('light') and dark Themes
-        myDiagram.themeManager.set('light', {
-            colors: {
-                background: '#fff',
-                text: '#111827',
-                textHighlight: '#11a8cd',
-                subtext: '#6b7280',
-                badge: '#f0fdf4',
-                badgeBorder: '#16a34a33',
-                badgeText: '#15803d',
-                divider: '#6b7280',
-                shadow: '#9ca3af',
-                tooltip: '#1f2937',
-                levels: [
-                    '#AC193D',
-                    '#2672EC',
-                    '#8C0095',
-                    '#5133AB',
-                    '#008299',
-                    '#D24726',
-                    '#008A00',
-                    '#094AB2'
-                ],
-                dragOver: '#f0f9ff',
-                link: '#9ca3af',
-                div: '#f3f4f6'
-            },
-            fonts: {
-                jabatan: "600 0.875rem InterVariable, sans-serif",
-                name: '500 0.875rem InterVariable, sans-serif',
-                normal: '0.875rem InterVariable, sans-serif',
-                badge: '500 0.75rem InterVariable, sans-serif',
-                link: '600 0.875rem InterVariable, sans-serif'
-            }
-        });
+        const myDiagram =
+            $(go.Diagram, "myDiagramDiv",  // the DIV HTML element
+                {
+                    initialDocumentSpot: go.Spot.TopCenter,
+                    initialViewportSpot: go.Spot.TopCenter,
+                    layout:
+                        $(go.TreeLayout,  // use a TreeLayout to position all of the nodes
+                            {
+                                treeStyle: go.TreeLayout.StyleLastParents,
+                                angle: 90,
+                                layerSpacing: 80,
+                                alternateAngle: 0,
+                                alternateAlignment: go.TreeLayout.AlignmentStart,
+                                alternateNodeIndent: 20,
+                                alternateNodeIndentPastParent: 1,
+                                alternateNodeSpacing: 20,
+                                alternateLayerSpacing: 40,
+                                alternateLayerSpacingParentOverlap: 1,
+                                alternatePortSpot: new go.Spot(0.001, 1, 20, 0),
+                                alternateChildPortSpot: go.Spot.Left
+                            })
+                });
 
         function theInfoTextConverter(info) {
             var str = "\n";
@@ -114,115 +79,62 @@
             return str;
         }
 
-        // this is used to determine feedback during drags
-        function mayWorkFor(node1, node2) {
-            if (!(node1 instanceof go.Node)) return false; // must be a Node
-            if (node1 === node2) return false; // cannot work for yourself
-            if (node2.isInTreeOf(node1)) return false; // cannot work for someone who works for you
-            return true;
+        function initx() {
+            myDiagram.nodeTemplate =
+                $(go.Node, "Auto",
+                    $(
+                        go.Shape,
+                        "Rectangle",
+                        { stroke: null, strokeWidth: 1 },
+                        new go.Binding(
+                            "fill",
+                            "isHighlighted",
+                            function (h) {
+                                return h ? "#F44336" : "#A7E7FC";
+                            }
+                        )
+                            .ofObject()
+                    ),
+                    $(go.Panel, "Table",
+                        { margin: 6, maxSize: new go.Size(250, NaN) },
+                        $(go.RowColumnDefinition,
+                            {
+                                column: 0,
+                                stretch: go.GraphObject.Horizontal,
+                                alignment: go.Spot.Center
+                            }),
+                        $(go.TextBlock,
+                            {
+                                row: 0, column: 0,
+                                maxSize: new go.Size(250, NaN), margin: 2,
+                                font: "500 16px Roboto, sans-serif",
+                                textAlign: "center"
+                            },
+                            new go.Binding("text", "jabatan")),
+                        $(go.TextBlock,
+                            {
+                                row: 1, column: 0,
+                                font: "12px Roboto, sans-serif",
+                                textAlign: "center"
+                            },
+                            new go.Binding("text", "", theInfoTextConverter)
+                        )
+                    )
+                );
+
+            myDiagram.linkTemplate =
+                $(go.Link, go.Link.Orthogonal,
+                    { corner: 5, selectable: false },
+                    $(go.Shape, { strokeWidth: 3, stroke: "#424242" }));
+
+            myOverview =
+                $(go.Overview, "myOverviewDiv",  // the HTML DIV element for the Overview
+                    { observed: myDiagram, contentAlignment: go.Spot.Center });   // tell it which Diagram to show and pan
         }
-
-        // Used to convert the node's tree level into a theme color
-        function findLevelColor(node) {
-            return node.findTreeLevel();
-        }
-
-        // define the Node template
-        myDiagram.nodeTemplate = new go.Node(go.Panel.Spot, {
-            isShadowed: true,
-            shadowOffset: new go.Point(0, 2),
-            selectionObjectName: 'BODY',
-        })
-            .add(
-                new go.Panel(go.Panel.Auto, { name: 'BODY' })
-                    .add(
-                        // define the node's outer shape
-                        new go.Shape('RoundedRectangle', {
-                            name: 'SHAPE',
-                            strokeWidth: 0,
-                            portId: '',
-                            spot1: go.Spot.TopLeft,
-                            spot2: go.Spot.BottomRight
-                        })
-                            .bindObject("fill", "isHighlighted", (h) => h ? "#80ffaa" : "background")
-                            .theme('fill', 'background'),
-                        new go.Panel(go.Panel.Table, { margin: 0.5, defaultRowSeparatorStrokeWidth: 0.5 })
-                            .theme('defaultRowSeparatorStroke', 'divider')
-                            .add(
-                                new go.Panel(go.Panel.Table, { padding: new go.Margin(18, 18, 18, 24) })
-                                    .addColumnDefinition(0, { width: 240 })
-                                    .add(
-                                        new go.Panel(go.Panel.Table, {
-                                            column: 0,
-                                            alignment: go.Spot.Center,
-                                            stretch: go.GraphObject.Horizontal,
-                                            // defaultAlignment: go.Spot.Left
-                                        })
-                                            .add(
-                                                new go.TextBlock({
-                                                    row: 0,
-                                                    column: 0,
-                                                    maxSize: new go.Size(250, NaN),
-                                                    margin: 2,
-                                                    textAlign: "center"
-                                                })
-                                                    .bindTwoWay('text', 'jabatan')
-                                                    .theme('stroke', 'text')
-                                                    .theme('font', 'jabatan'),
-                                            )
-                                            .add(
-                                                new go.TextBlock({
-                                                    row: 1,
-                                                    column: 0,
-                                                    textAlign: "center"
-                                                })
-                                                    .bindTwoWay('text', '', theInfoTextConverter)
-                                                    .theme('stroke', 'text')
-                                                    .theme('font', 'normal'),
-                                            ),
-                                    ),
-                            )
-                    ), // end Auto Panel
-                new go.Shape('RoundedLeftRectangle', {
-                    alignment: go.Spot.Left,
-                    alignmentFocus: go.Spot.Left,
-                    stretch: go.Stretch.Vertical,
-                    width: 6,
-                    strokeWidth: 0
-                }).themeObject('fill', '', 'levels', findLevelColor),
-            )
-            .theme('shadowColor', 'shadow')
-            // for sorting, have the Node.text be the data.name
-            .bind('text', 'name')
-            // bind the Part.layerName to control the Node's layer depending on whether it isSelected
-            .bindObject('layerName', 'isSelected', (sel) => (sel ? 'Foreground' : ''))
-            .bindTwoWay('isTreeExpanded');
-
-        // define the Link template
-        myDiagram.linkTemplate = new go.Link({
-            routing: go.Routing.Orthogonal,
-            layerName: 'Background',
-            corner: 5,
-            selectable: false
-        }).add(
-            new go.Shape({ strokeWidth: 3 })
-                .theme('stroke', 'link')
-        ); // the link shape
-
 
 
         // read in the JSON-format data from the "mySavedModel" element
-        load();
-
-        // support editing the properties of the selected person in HTML
-        // myInspector = new Inspector('myInspector', myDiagram, {
-        //     properties: {
-        //         key: { readOnly: true },
-        //         // Don't show these temporary data values
-        //         EMAIL: { show: false },
-        //         PHONE: { show: false }
-        //     }
-        // });
+        // load();
 
         // Setup zoom to fit button
         document
@@ -266,11 +178,15 @@
             document.getElementById('mySavedModel').value = myDiagram.model.toJson();
             myDiagram.isModified = false;
         }
+
         function load() {
-            myDiagram.model = new go.TreeModel({
-                nodeParentKeyProperty: 'boss',
-                nodeDataArray: JSON.parse(nodeDataArray),
-            })
+            myDiagram.model =
+                $(go.TreeModel,
+                    {
+                        nodeParentKeyProperty: "boss",  // this property refers to the parent node data
+                        nodeDataArray: nodeDataArray
+                    }
+                );
         }
 
         document.getElementById("download").addEventListener("click", () => {
@@ -294,11 +210,11 @@
             const blob = myDiagram.makeImageData({ scale: 0.5, returnType: 'blob', callback: blobCallback, size: new go.Size(2000, 2000) });
         }
 
-        // window.addEventListener('DOMContentLoaded', () => {
-        //     setTimeout(() => {
-        //         init();
-        //     }, 300);
-        // });
+        window.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                load();
+            }, 300);
+        });
 
 
     </script>
