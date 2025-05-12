@@ -14,7 +14,7 @@ def build_hierarchy(df: pd.DataFrame) -> dict:
              for item in df.to_dict(orient="records")}
     # ic(nodes)
 
-    for node_id, node in nodes.items():
+    for _, node in nodes.items():
         parent_id = node.get("boss")
         if parent_id ==0:
             root={"hieararchy": node}

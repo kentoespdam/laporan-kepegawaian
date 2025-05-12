@@ -1,100 +1,70 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
-    <!-- <script src="https://cdn.jsdelivr.net/npm/gojs/release/go.js" defer></script> -->
-    <!-- <script src="https://cdn.jsdelivr.net/npm/gojs/release/go-debug.js"></script> -->
-    <script src="http://127.0.0.1:8000/public/go.js?v=1"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Struktur Organisasi</title>
-</head>
-
-<body class="m-2">
-    <main class="grid gap-2 w-full">
-        <div>
-            <div class="relative flex h-10 w-full min-w-[200px] max-w-[24rem]">
-                <button onclick="searchDiagram()"
-                    class="!absolute right-1 top-1 z-10 select-none rounded bg-blue-500 py-2 px-4 text-center align-middle font-sans text-xs font-bold uppercase text-white shadow-md shadow-blue-500/20 transition-all hover:shadow-lg hover:shadow-blue-500/40 focus:opacity-[0.85] focus:shadow-none active:opacity-[0.85] active:shadow-none peer-placeholder-shown:pointer-events-none peer-placeholder-shown:bg-blue-gray-500 peer-placeholder-shown:opacity-50 peer-placeholder-shown:shadow-none"
-                    type="button" data-ripple-light="true">Cari</button>
-                <input type="search" id="mySearch" onkeypress="if (event.keyCode === 13) searchDiagram()"
-                    placeholder=" "
-                    class="peer h-full w-full rounded-[7px] border border-blue-gray-200 bg-transparent px-3 py-2.5 pr-20 font-sans text-sm font-normal text-blue-gray-700 outline outline-0 transition-all placeholder-shown:border placeholder-shown:border-blue-gray-200 placeholder-shown:border-t-blue-gray-200 focus:border-2 focus:border-blue-500 focus:border-t-transparent focus:outline-0 disabled:border-0 disabled:bg-blue-gray-50" />
-                <label
-                    class="before:content[' '] after:content[' '] pointer-events-none absolute left-0 -top-1.5 flex h-full w-full select-none text-[11px] font-normal leading-tight text-blue-gray-400 transition-all before:pointer-events-none before:mt-[6.5px] before:mr-1 before:box-border before:block before:h-1.5 before:w-2.5 before:rounded-tl-md before:border-t before:border-l before:border-blue-gray-200 before:transition-all after:pointer-events-none after:mt-[6.5px] after:ml-1 after:box-border after:block after:h-1.5 after:w-2.5 after:flex-grow after:rounded-tr-md after:border-t after:border-r after:border-blue-gray-200 after:transition-all peer-placeholder-shown:text-sm peer-placeholder-shown:leading-[3.75] peer-placeholder-shown:text-blue-gray-500 peer-placeholder-shown:before:border-transparent peer-placeholder-shown:after:border-transparent peer-focus:text-[11px] peer-focus:leading-tight peer-focus:text-blue-500 peer-focus:before:border-t-2 peer-focus:before:border-l-2 peer-focus:before:!border-blue-500 peer-focus:after:border-t-2 peer-focus:after:border-r-2 peer-focus:after:!border-blue-500 peer-disabled:text-transparent peer-disabled:before:border-transparent peer-disabled:after:border-transparent peer-disabled:peer-placeholder-shown:text-blue-gray-500">
-                    Jabatan
-                </label>
-            </div>
-        </div>
-        <div id="myDiagramDiv" class="w-full h-[700px] bg-gray-300"></div>
-        <div class="flex gap-2">
-            <button id="zoomToFit"
-                class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
-                Zoom to Fit
-            </button>
-            <button id="centerRoot"
-                class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
-                Center on root
-            </button>
-            <button id="download"
-                class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800">
-                Download Image
-            </button>
-        </div>
-    </main>
-
-    <script>
-        const nodeJson = '{{ data_so | tojson }}'
-        const nodeDataArray = JSON.parse(nodeJson)
-        const $ = go.GraphObject.make;  // for conciseness in defining templates
-
-        const myDiagram =
-            $(go.Diagram, "myDiagramDiv",  // the DIV HTML element
-                {
-                    initialDocumentSpot: go.Spot.TopCenter,
-                    initialViewportSpot: go.Spot.TopCenter,
-                    layout:
-                        $(go.TreeLayout,  // use a TreeLayout to position all of the nodes
-                            {
-                                treeStyle: go.TreeLayout.StyleLastParents,
-                                angle: 90,
-                                layerSpacing: 80,
-                                alternateAngle: 0,
-                                alternateAlignment: go.TreeLayout.AlignmentStart,
-                                alternateNodeIndent: 20,
-                                alternateNodeIndentPastParent: 1,
-                                alternateNodeSpacing: 20,
-                                alternateLayerSpacing: 40,
-                                alternateLayerSpacingParentOverlap: 1,
-                                alternatePortSpot: new go.Spot(0.001, 1, 20, 0),
-                                alternateChildPortSpot: go.Spot.Left
-                            })
-                });
-
-        function theInfoTextConverter(info) {
-            var str = "\n";
-            if (info.name) str += "(" + info.name + ")";
-            if (info.nik) str += "\n" + info.nik;
-            return str;
+    <meta name="description" content="A larger org chart with an Overview and searching capability." />
+    <meta charset="UTF-8">
+    <style type="text/css">
+        #myOverviewDiv {
+            position: absolute;
+            width: 200px;
+            height: 100px;
+            top: 30px;
+            left: 10px;
+            background-color: aliceblue;
+            z-index: 300;
+            /* make sure its in front */
+            border: solid 1px blue;
         }
-
+    </style>
+    <!-- <script type="text/javascript" src="http://192.168.230.254:88/server/res/dist/js/go.js?v=1"></script> -->
+    <script type="text/javascript" src="{{ url_for('public', path='/go.js')}}"></script>
+    <link href='https://fonts.googleapis.com/css?family=Roboto:400,500' rel='stylesheet' type='text/css'>
+    <script id="code">
         function initx() {
+            var $ = go.GraphObject.make;  // for conciseness in defining templates
+
+            myDiagram =
+                $(go.Diagram, "myDiagramDiv",  // the DIV HTML element
+                    {
+                        initialDocumentSpot: go.Spot.TopCenter,
+                        initialViewportSpot: go.Spot.TopCenter,
+                        layout:
+                            $(go.TreeLayout,  // use a TreeLayout to position all of the nodes
+                                {
+                                    treeStyle: go.TreeLayout.StyleLastParents,
+                                    angle: 90,
+                                    layerSpacing: 80,
+                                    alternateAngle: 0,
+                                    alternateAlignment: go.TreeLayout.AlignmentStart,
+                                    alternateNodeIndent: 20,
+                                    alternateNodeIndentPastParent: 1,
+                                    alternateNodeSpacing: 20,
+                                    alternateLayerSpacing: 40,
+                                    alternateLayerSpacingParentOverlap: 1,
+                                    alternatePortSpot: new go.Spot(0.001, 1, 20, 0),
+                                    alternateChildPortSpot: go.Spot.Left
+                                })
+                    });
+
+            function theInfoTextConverter(info) {
+                var str = "\n";
+                if (info.name) str += "(" + info.name + ")";
+                if (info.nik) str += "\n" + info.nik;
+                return str;
+            }
+
+            function getImg(url) {
+                return url;
+            }
+
             myDiagram.nodeTemplate =
                 $(go.Node, "Auto",
-                    $(
-                        go.Shape,
-                        "Rectangle",
+                    $(go.Shape, "Rectangle",
                         { stroke: null, strokeWidth: 1 },
-                        new go.Binding(
-                            "fill",
-                            "isHighlighted",
-                            function (h) {
-                                return h ? "#F44336" : "#A7E7FC";
-                            }
-                        )
-                            .ofObject()
-                    ),
+                        new go.Binding("fill", "isHighlighted", function (h) { return h ? "#F44336" : "#A7E7FC"; }).ofObject()),
                     $(go.Panel, "Table",
                         { margin: 6, maxSize: new go.Size(250, NaN) },
                         $(go.RowColumnDefinition,
@@ -119,52 +89,53 @@
                             },
                             new go.Binding("text", "", theInfoTextConverter)
                         )
+                        //,
+                        // $(go.Picture,
+                        // {
+                        //   row: 2, column: 0, margin: 2,
+                        //   maxSize: new go.Size(250, NaN), margin: 2,
+                        //   imageStretch: go.GraphObject.Uniform,
+                        //   alignment: go.Spot.Center
+                        // },
+                        // // only set a desired size if a flag is also present:
+                        // //new go.Binding("desiredSize", "imgurl", function(){ return new go.Size(100, 100) }),
+                        // new go.Binding("source", "imgurl", getImg))
                     )
                 );
 
             myDiagram.linkTemplate =
                 $(go.Link, go.Link.Orthogonal,
                     { corner: 5, selectable: false },
-                    $(go.Shape, { strokeWidth: 3, stroke: "#424242" }));
+                    $(go.Shape, { strokeWidth: 3, stroke: "#424242" }));  // dark gray, rounded corner links
+
+            var nodeDataArray = JSON.parse('{{ data_so | tojson | safe }}');
+
+            myDiagram.model =
+                $(go.TreeModel,
+                    {
+                        nodeParentKeyProperty: "boss",  // this property refers to the parent node data
+                        nodeDataArray: nodeDataArray
+                    });
 
             myOverview =
                 $(go.Overview, "myOverviewDiv",  // the HTML DIV element for the Overview
                     { observed: myDiagram, contentAlignment: go.Spot.Center });   // tell it which Diagram to show and pan
         }
 
-
-        // read in the JSON-format data from the "mySavedModel" element
-        // load();
-
-        // Setup zoom to fit button
-        document
-            .getElementById('zoomToFit')
-            .addEventListener('click', () => myDiagram.commandHandler.zoomToFit());
-
-        document.getElementById('centerRoot').addEventListener('click', () => {
-            myDiagram.scale = 1;
-            myDiagram.commandHandler.scrollToPart(myDiagram.findNodeForKey(1));
-        });
-
-
-        // } // end init
-
         function searchDiagram() {
-            const input = document.getElementById("mySearch");
+            var input = document.getElementById("mySearch");
             if (!input) return;
             input.focus();
 
             myDiagram.startTransaction("highlight search");
 
             if (input.value) {
-                const regex = new RegExp(input.value, "i");
-                const results = myDiagram.findNodesByExample({ jabatan: regex },
+                var regex = new RegExp(input.value, "i");
+                var results = myDiagram.findNodesByExample({ jabatan: regex },
                     { nation: regex },
                     { title: regex },
                     { headOf: regex });
                 myDiagram.highlightCollection(results);
-                // console.log(collection)
-                myDiagram.selectCollection(results);
                 if (results.count > 0) myDiagram.centerRect(results.first().actualBounds);
             } else {  // empty string only clears highlighteds collection
                 myDiagram.clearHighlighteds();
@@ -172,52 +143,17 @@
 
             myDiagram.commitTransaction("highlight search");
         }
-
-        // Show the diagram's model in JSON format
-        function save() {
-            document.getElementById('mySavedModel').value = myDiagram.model.toJson();
-            myDiagram.isModified = false;
-        }
-
-        function load() {
-            myDiagram.model =
-                $(go.TreeModel,
-                    {
-                        nodeParentKeyProperty: "boss",  // this property refers to the parent node data
-                        nodeDataArray: nodeDataArray
-                    }
-                );
-        }
-
-        document.getElementById("download").addEventListener("click", () => {
-            myDiagram.makeImage({ scale: 1 }, "image/png", "myDiagram.png");
-        })
-
-        function blobCallback(blob) {
-            const url = window.URL.createObjectURL(blob)
-            const filename = "struktur-organisasi.png"
-            const a = document.createElement("a")
-            a.style.display = "none"
-            a.href = url
-            a.download = filename
-            document.body.appendChild(a)
-            a.click()
-            window.URL.revokeObjectURL(url)
-            document.body.removeChild(a)
-        }
-
-        function makeBlob() {
-            const blob = myDiagram.makeImageData({ scale: 0.5, returnType: 'blob', callback: blobCallback, size: new go.Size(2000, 2000) });
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            setTimeout(() => {
-                load();
-            }, 300);
-        });
-
-
     </script>
-</body>
+</head>
+
+<body onload="initx()">
+    <div id="sample" style="position: relative;">
+        <input type="search" id="mySearch" onkeypress="if (event.keyCode === 13) searchDiagram()" />
+        <button onclick="searchDiagram()">Cari</button>
+        <div id="myDiagramDiv"
+            style="background-color: white; border: solid 1px black; width: 100%; height: 700px; margin-top: 5px;">
+        </div>
+        <div id="myOverviewDiv"></div>
+    </div>
 
 </html>
