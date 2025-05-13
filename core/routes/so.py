@@ -32,12 +32,12 @@ async def hierarchy():
     return JSONResponse(content=data_so, status_code=200)
 
 
-@router.get("/gojs", response_class=PlainTextResponse)
+@router.get("/gojs")
 async def gojs():
-    with open("core/views/go.js", "r") as file:
-        js_content = file.read()
-    filepath = f"data:application/javascript;base64,{js_content}"
-    return PlainTextResponse(content=filepath, status_code=200)
+    data_so = fetch_struktur_organisasi()
+    if data_so is None:
+        return JSONResponse(content={}, status_code=404)
+    return JSONResponse(content=data_so, status_code=200)
 
 
 @router.get("/template", response_class=HTMLResponse)
