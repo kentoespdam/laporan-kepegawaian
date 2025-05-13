@@ -1,4 +1,6 @@
 <script id="code">
+    const ta_so = document.getElementById("data_so")
+    const data_so = JSON.parse(ta_so.value)
     function initx() {
         var $ = go.GraphObject.make;  // for conciseness in defining templates
 
@@ -73,13 +75,14 @@
                 { corner: 5, selectable: false },
                 $(go.Shape, { strokeWidth: 3, stroke: "#424242" }));  // dark gray, rounded corner links
 
-        var nodeDataArray = JSON.parse('{{ data_so | tojson | safe }}');
+        // var nodeDataArray = JSON.parse('{{ data_so | tojson | safe }}');
 
         myDiagram.model =
             $(go.TreeModel,
                 {
                     nodeParentKeyProperty: "boss",  // this property refers to the parent node data
-                    nodeDataArray: nodeDataArray
+                    // nodeDataArray: nodeDataArray
+                    nodeDataArray: data_so
                 });
 
         myOverview =
