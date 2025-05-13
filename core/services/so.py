@@ -1,6 +1,5 @@
 import pandas as pd
 from core.model.so import fetch_struktur_organisasi
-from icecream import ic
 
 
 def fetch_hierarchy():
@@ -16,9 +15,9 @@ def build_hierarchy(df: pd.DataFrame) -> dict:
 
     for _, node in nodes.items():
         parent_id = node.get("boss")
-        if parent_id ==0:
-            root={"hieararchy": node}
+        if parent_id == 0:
+            root = {"hieararchy": node}
         elif parent_id in nodes:
-            nodes[parent_id]["subordinates"].append(node)        
-        
+            nodes[parent_id]["subordinates"].append(node)
+
     return root

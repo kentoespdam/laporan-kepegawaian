@@ -1,159 +1,124 @@
-<!DOCTYPE html>
-<html>
+<script id="code">
+    function initx() {
+        var $ = go.GraphObject.make;  // for conciseness in defining templates
 
-<head>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Struktur Organisasi</title>
-    <meta name="description" content="A larger org chart with an Overview and searching capability." />
-    <meta charset="UTF-8">
-    <style type="text/css">
-        #myOverviewDiv {
-            position: absolute;
-            width: 200px;
-            height: 100px;
-            top: 30px;
-            left: 10px;
-            background-color: aliceblue;
-            z-index: 300;
-            /* make sure its in front */
-            border: solid 1px blue;
+        myDiagram =
+            $(go.Diagram, "myDiagramDiv",  // the DIV HTML element
+                {
+                    initialDocumentSpot: go.Spot.TopCenter,
+                    initialViewportSpot: go.Spot.TopCenter,
+                    layout:
+                        $(go.TreeLayout,  // use a TreeLayout to position all of the nodes
+                            {
+                                treeStyle: go.TreeLayout.StyleLastParents,
+                                angle: 90,
+                                layerSpacing: 80,
+                                alternateAngle: 0,
+                                alternateAlignment: go.TreeLayout.AlignmentStart,
+                                alternateNodeIndent: 20,
+                                alternateNodeIndentPastParent: 1,
+                                alternateNodeSpacing: 20,
+                                alternateLayerSpacing: 40,
+                                alternateLayerSpacingParentOverlap: 1,
+                                alternatePortSpot: new go.Spot(0.001, 1, 20, 0),
+                                alternateChildPortSpot: go.Spot.Left
+                            })
+                });
+
+        function theInfoTextConverter(info) {
+            var str = "\n";
+            if (info.name) str += "(" + info.name + ")";
+            if (info.nik) str += "\n" + info.nik;
+            return str;
         }
-    </style>
-    <!-- <script type="text/javascript" src="http://192.168.230.254:88/server/res/dist/js/go.js?v=1"></script> -->
-    <script type="text/javascript" src="{{ url_for('public', path='/go.js')}}"></script>
-    <link href='https://fonts.googleapis.com/css?family=Roboto:400,500' rel='stylesheet' type='text/css'>
-    <script id="code">
-        function initx() {
-            var $ = go.GraphObject.make;  // for conciseness in defining templates
 
-            myDiagram =
-                $(go.Diagram, "myDiagramDiv",  // the DIV HTML element
-                    {
-                        initialDocumentSpot: go.Spot.TopCenter,
-                        initialViewportSpot: go.Spot.TopCenter,
-                        layout:
-                            $(go.TreeLayout,  // use a TreeLayout to position all of the nodes
-                                {
-                                    treeStyle: go.TreeLayout.StyleLastParents,
-                                    angle: 90,
-                                    layerSpacing: 80,
-                                    alternateAngle: 0,
-                                    alternateAlignment: go.TreeLayout.AlignmentStart,
-                                    alternateNodeIndent: 20,
-                                    alternateNodeIndentPastParent: 1,
-                                    alternateNodeSpacing: 20,
-                                    alternateLayerSpacing: 40,
-                                    alternateLayerSpacingParentOverlap: 1,
-                                    alternatePortSpot: new go.Spot(0.001, 1, 20, 0),
-                                    alternateChildPortSpot: go.Spot.Left
-                                })
-                    });
+        function getImg(url) {
+            return url;
+        }
 
-            function theInfoTextConverter(info) {
-                var str = "\n";
-                if (info.name) str += "(" + info.name + ")";
-                if (info.nik) str += "\n" + info.nik;
-                return str;
-            }
-
-            function getImg(url) {
-                return url;
-            }
-
-            myDiagram.nodeTemplate =
-                $(go.Node, "Auto",
-                    $(go.Shape, "Rectangle",
-                        { stroke: null, strokeWidth: 1 },
-                        new go.Binding("fill", "isHighlighted", function (h) { return h ? "#F44336" : "#A7E7FC"; }).ofObject()),
-                    $(go.Panel, "Table",
-                        { margin: 6, maxSize: new go.Size(250, NaN) },
-                        $(go.RowColumnDefinition,
-                            {
-                                column: 0,
-                                stretch: go.GraphObject.Horizontal,
-                                alignment: go.Spot.Center
-                            }),
-                        $(go.TextBlock,
-                            {
-                                row: 0, column: 0,
-                                maxSize: new go.Size(250, NaN), margin: 2,
-                                font: "500 16px Roboto, sans-serif",
-                                textAlign: "center"
-                            },
-                            new go.Binding("text", "jabatan")),
-                        $(go.TextBlock,
-                            {
-                                row: 1, column: 0,
-                                font: "12px Roboto, sans-serif",
-                                textAlign: "center"
-                            },
-                            new go.Binding("text", "", theInfoTextConverter)
-                        )
-                        //,
-                        // $(go.Picture,
-                        // {
-                        //   row: 2, column: 0, margin: 2,
-                        //   maxSize: new go.Size(250, NaN), margin: 2,
-                        //   imageStretch: go.GraphObject.Uniform,
-                        //   alignment: go.Spot.Center
-                        // },
-                        // // only set a desired size if a flag is also present:
-                        // //new go.Binding("desiredSize", "imgurl", function(){ return new go.Size(100, 100) }),
-                        // new go.Binding("source", "imgurl", getImg))
+        myDiagram.nodeTemplate =
+            $(go.Node, "Auto",
+                $(go.Shape, "Rectangle",
+                    { stroke: null, strokeWidth: 1 },
+                    new go.Binding("fill", "isHighlighted", function (h) { return h ? "#F44336" : "#A7E7FC"; }).ofObject()),
+                $(go.Panel, "Table",
+                    { margin: 6, maxSize: new go.Size(250, NaN) },
+                    $(go.RowColumnDefinition,
+                        {
+                            column: 0,
+                            stretch: go.GraphObject.Horizontal,
+                            alignment: go.Spot.Center
+                        }),
+                    $(go.TextBlock,
+                        {
+                            row: 0, column: 0,
+                            maxSize: new go.Size(250, NaN), margin: 2,
+                            font: "500 16px Roboto, sans-serif",
+                            textAlign: "center"
+                        },
+                        new go.Binding("text", "jabatan")),
+                    $(go.TextBlock,
+                        {
+                            row: 1, column: 0,
+                            font: "12px Roboto, sans-serif",
+                            textAlign: "center"
+                        },
+                        new go.Binding("text", "", theInfoTextConverter)
                     )
-                );
+                )
+            );
 
-            myDiagram.linkTemplate =
-                $(go.Link, go.Link.Orthogonal,
-                    { corner: 5, selectable: false },
-                    $(go.Shape, { strokeWidth: 3, stroke: "#424242" }));  // dark gray, rounded corner links
+        myDiagram.linkTemplate =
+            $(go.Link, go.Link.Orthogonal,
+                { corner: 5, selectable: false },
+                $(go.Shape, { strokeWidth: 3, stroke: "#424242" }));  // dark gray, rounded corner links
 
-            var nodeDataArray = JSON.parse('{{ data_so | tojson | safe }}');
+        var nodeDataArray = JSON.parse('{{ data_so | tojson | safe }}');
 
-            myDiagram.model =
-                $(go.TreeModel,
-                    {
-                        nodeParentKeyProperty: "boss",  // this property refers to the parent node data
-                        nodeDataArray: nodeDataArray
-                    });
+        myDiagram.model =
+            $(go.TreeModel,
+                {
+                    nodeParentKeyProperty: "boss",  // this property refers to the parent node data
+                    nodeDataArray: nodeDataArray
+                });
 
-            myOverview =
-                $(go.Overview, "myOverviewDiv",  // the HTML DIV element for the Overview
-                    { observed: myDiagram, contentAlignment: go.Spot.Center });   // tell it which Diagram to show and pan
+        myOverview =
+            $(go.Overview, "myOverviewDiv",  // the HTML DIV element for the Overview
+                { observed: myDiagram, contentAlignment: go.Spot.Center });   // tell it which Diagram to show and pan
+    }
+
+    function searchDiagram() {
+        var input = document.getElementById("mySearch");
+        if (!input) return;
+        input.focus();
+
+        myDiagram.startTransaction("highlight search");
+
+        if (input.value) {
+            var regex = new RegExp(input.value, "i");
+            var results = myDiagram.findNodesByExample({ jabatan: regex },
+                { nation: regex },
+                { title: regex },
+                { headOf: regex });
+            myDiagram.highlightCollection(results);
+            if (results.count > 0) myDiagram.centerRect(results.first().actualBounds);
+        } else {  // empty string only clears highlighteds collection
+            myDiagram.clearHighlighteds();
         }
 
-        function searchDiagram() {
-            var input = document.getElementById("mySearch");
-            if (!input) return;
-            input.focus();
+        myDiagram.commitTransaction("highlight search");
+    }
 
-            myDiagram.startTransaction("highlight search");
+    $(function () {
+        initx();
+    });
+</script>
 
-            if (input.value) {
-                var regex = new RegExp(input.value, "i");
-                var results = myDiagram.findNodesByExample({ jabatan: regex },
-                    { nation: regex },
-                    { title: regex },
-                    { headOf: regex });
-                myDiagram.highlightCollection(results);
-                if (results.count > 0) myDiagram.centerRect(results.first().actualBounds);
-            } else {  // empty string only clears highlighteds collection
-                myDiagram.clearHighlighteds();
-            }
-
-            myDiagram.commitTransaction("highlight search");
-        }
-    </script>
-</head>
-
-<body onload="initx()">
-    <div id="sample" style="position: relative;">
-        <input type="search" id="mySearch" onkeypress="if (event.keyCode === 13) searchDiagram()" />
-        <button onclick="searchDiagram()">Cari</button>
-        <div id="myDiagramDiv"
-            style="background-color: white; border: solid 1px black; width: 100%; height: 700px; margin-top: 5px;">
-        </div>
-        <div id="myOverviewDiv"></div>
+<div id="sample" style="position: relative;">
+    <input type="search" id="mySearch" onkeypress="if (event.keyCode === 13) searchDiagram()" />
+    <button onclick="searchDiagram()">Cari</button>
+    <div id="myDiagramDiv"
+        style="background-color: white; border: solid 1px black; width: 100%; height: 700px; margin-top: 5px;">
     </div>
-
-</html>
+    <div id="myOverviewDiv"></div>
+</div>
