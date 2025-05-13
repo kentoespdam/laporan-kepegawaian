@@ -41,10 +41,11 @@ async def gojs():
 
 
 @router.get("/template", response_class=HTMLResponse)
-async def template(request: Request):
+async def template(request: Request, script_url: str = None):
     data_so = fetch_struktur_organisasi()
     return templates.TemplateResponse(
         request=request,
         name="so.html",
-        context={"data_so": data_so.to_dict("records")},
+        context={"data_so": data_so.to_dict(
+            "records"), "script_url": script_url},
     )

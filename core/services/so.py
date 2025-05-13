@@ -11,7 +11,6 @@ def fetch_hierarchy():
 def build_hierarchy(df: pd.DataFrame) -> dict:
     nodes = {item["key"]: {**item, 'subordinates': []}
              for item in df.to_dict(orient="records")}
-    # ic(nodes)
 
     for _, node in nodes.items():
         parent_id = node.get("boss")
