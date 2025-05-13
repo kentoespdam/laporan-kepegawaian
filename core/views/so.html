@@ -109,8 +109,9 @@
         myDiagram.commitTransaction("highlight search");
     }
 
-    $(function () {
-        initx();
+    // document ready
+    document.addEventListener("DOMContentLoaded", () => {
+        setTimeout(initx, 300);
     });
 </script>
 
