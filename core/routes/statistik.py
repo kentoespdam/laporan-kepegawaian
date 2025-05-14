@@ -22,7 +22,7 @@ async def by_golongan():
     result = fetch_golongan_data()
     if result.empty:
         return JSONResponse(content={}, status_code=404)
-    return JSONResponse(content={"content": result.to_dict("records")}, status_code=200)
+    return JSONResponse(content=result.to_dict("records"), status_code=200)
 
 
 @router.get("/pendidikan1")
@@ -30,7 +30,7 @@ async def by_pendidikan_1():
     result = fetch_pendidikan_1_data()
     if result.empty:
         return JSONResponse(content={}, status_code=404)
-    return JSONResponse(content={"content": result.to_dict("records")}, status_code=200)
+    return JSONResponse(content=result.to_dict("records"), status_code=200)
 
 
 @router.get("/pendidikan2")
@@ -59,7 +59,7 @@ async def by_jenis_kelamin():
     result = fetch_jenis_kelamin_data()
     if result.empty:
         return JSONResponse(content={}, status_code=404)
-    return JSONResponse(content={"content": result.to_dict("records")}, status_code=200)
+    return JSONResponse(content=result.to_dict("records"), status_code=200)
 
 
 @router.get("/gelar_akademik")
@@ -67,7 +67,7 @@ async def by_gelar():
     result = fetch_gelar_data()
     if result.empty:
         return JSONResponse(content={}, status_code=404)
-    return JSONResponse(content={"content": result.to_dict("records")}, status_code=200)
+    return JSONResponse(content=result.to_dict("records"), status_code=200)
 
 
 @router.get("/agama")
@@ -75,7 +75,7 @@ async def by_agama():
     result = fetch_agama_data()
     if result.empty:
         return JSONResponse(content={}, status_code=404)
-    return JSONResponse(content={"content": result.to_dict("records")}, status_code=200)
+    return JSONResponse(content=result.to_dict("records"), status_code=200)
 
 
 @router.get("/status_pegawai")
@@ -83,4 +83,4 @@ async def by_status_pegawai():
     result = fetch_status_pegawai_data()
     if result.empty:
         return JSONResponse(content={}, status_code=404)
-    return JSONResponse(content={"content": result.to_dict("records")}, status_code=200)
+    return JSONResponse(content=result.to_dict("records"), status_code=200)

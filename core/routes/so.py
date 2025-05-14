@@ -1,10 +1,8 @@
-from fastapi import APIRouter, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
 
 from core.model.so import fetch_struktur_organisasi
-from core.services.so import fetch_hierarchy
-from icecream import ic
 
 router = APIRouter(
     prefix="/so",
@@ -21,31 +19,3 @@ async def index():
     if data_so.empty:
         return JSONResponse(content={}, status_code=404)
     return JSONResponse(content=data_so.to_dict("records"), status_code=200)
-
-
-@router.get("/hierarchy")
-async def hierarchy():
-    data_so = fetch_hierarchy()
-    ic(data_so)
-    if data_so is None:
-        return JSONResponse(content={}, status_code=404)
-    return JSONResponse(content=data_so, status_code=200)
-
-
-@router.get("/gojs")
-async def gojs():
-    data_so = fetch_struktur_organisasi()
-    if data_so is None:
-        return JSONResponse(content={}, status_code=404)
-    return JSONResponse(content=data_so, status_code=200)
-
-
-@router.get("/template", response_class=HTMLResponse)
-async def template(request: Request, script_url: str = None):
-    data_so = fetch_struktur_organisasi()
-    return templates.TemplateResponse(
-        request=request,
-        name="so.html",
-        context={"data_so": data_so.to_dict(
-            "records"), "script_url": script_url},
-    )
