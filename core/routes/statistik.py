@@ -45,10 +45,8 @@ async def by_umur():
         return JSONResponse(content={}, status_code=404)
     return JSONResponse(
         content={
-            "content": {
-                "umur": data.to_dict("records"),
-                "range": range.to_dict("records"),
-            }
+            "umur": data.to_dict("records"),
+            "range": range.to_dict("records"),
         },
         status_code=200,
     )
