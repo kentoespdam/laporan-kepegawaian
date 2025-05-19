@@ -22,8 +22,8 @@ def fetch_golongan_data():
 
 def fetch_pendidikan_1_data():
     data = fetch_by_pendidikan_1()
-    data = data.astype({"jumlah": int})
-    data["persen"] = round(((data["jumlah"] / data["jumlah"].sum()) * 100), 2)
+    data = data.astype({"total": int})
+    data["persen"] = round(((data["total"] / data["total"].sum()) * 100), 2)
     return data
 
 
