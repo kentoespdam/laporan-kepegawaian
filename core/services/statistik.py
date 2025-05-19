@@ -33,8 +33,8 @@ def fetch_pendidikan_2_data():
 
 def fetch_umur_data():
     data = fetch_by_umur()
-    data = data.astype({"jumlah": int})
-    data["persen"] = round(((data["jumlah"] / data["jumlah"].sum()) * 100), 2)
+    data = data.astype({"total": int})
+    data["persen"] = round(((data["total"] / data["total"].sum()) * 100), 2)
     range = _generate_data_umur2(data)
     return data, range
 

@@ -59,7 +59,7 @@ def fetch_by_umur():
     sql = """
         SELECT
             TIMESTAMPDIFF(YEAR, bio.tanggal_lahir, now()) AS umur,
-            COUNT(TIMESTAMPDIFF(YEAR, bio.tanggal_lahir, now())) AS jumlah 
+            COUNT(TIMESTAMPDIFF(YEAR, bio.tanggal_lahir, now())) AS total 
         FROM
             pegawai AS peg
             INNER JOIN biodata AS bio ON peg.nik = bio.nik 
