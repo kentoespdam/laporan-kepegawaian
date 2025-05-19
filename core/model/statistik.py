@@ -31,7 +31,7 @@ def fetch_by_pendidikan_1():
     sql = """
         SELECT
             jp.nama,
-            COUNT(*) AS jumlah 
+            COUNT(*) AS total 
         FROM
             pegawai AS peg
             INNER JOIN biodata AS bio ON peg.nik = bio.nik
