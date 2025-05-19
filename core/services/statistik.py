@@ -41,14 +41,14 @@ def fetch_umur_data():
 
 def _generate_data_umur2(df: pd.DataFrame) -> pd.DataFrame:
     list_range = ["<20", "20-29", "30-39", "40-49", "50-59", ">60"]
-    range1 = df.query("umur < 20")["jumlah"].sum()
-    range2 = df.query("umur >= 20 and umur < 30")["jumlah"].sum()
-    range3 = df.query("umur >= 30 and umur < 40")["jumlah"].sum()
-    range4 = df.query("umur >= 40 and umur < 50")["jumlah"].sum()
-    range5 = df.query("umur >= 50 and umur < 60")["jumlah"].sum()
-    range6 = df.query("umur >= 60")["jumlah"].sum()
-    jumlah = [range1, range2, range3, range4, range5, range6]
-    return pd.DataFrame({"range": list_range, "jumlah": jumlah})
+    range1 = df.query("umur < 20")["total"].sum()
+    range2 = df.query("umur >= 20 and umur < 30")["total"].sum()
+    range3 = df.query("umur >= 30 and umur < 40")["total"].sum()
+    range4 = df.query("umur >= 40 and umur < 50")["total"].sum()
+    range5 = df.query("umur >= 50 and umur < 60")["total"].sum()
+    range6 = df.query("umur >= 60")["total"].sum()
+    total = [range1, range2, range3, range4, range5, range6]
+    return pd.DataFrame({"range": list_range, "total": total})
 
 
 def fetch_jenis_kelamin_data():
