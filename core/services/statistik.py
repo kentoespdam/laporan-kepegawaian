@@ -55,7 +55,7 @@ def _generate_data_umur2(df: pd.DataFrame) -> pd.DataFrame:
 def fetch_jenis_kelamin_data():
     data = fetch_by_jenis_kelamin()
     data = data.astype({"total": int})
-    data["persen"] = round(((data["total"] / data["total"].sum()) * 100), 2)
+    data["persen"] = (data["total"] / data["total"].sum()) * 100
     return data
 
 
