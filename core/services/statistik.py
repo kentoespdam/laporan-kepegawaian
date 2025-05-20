@@ -36,6 +36,7 @@ def fetch_umur_data():
     data = data.astype({"total": int})
     data["persen"] = round(((data["total"] / data["total"].sum()) * 100), 2)
     range = _generate_data_umur2(data)
+    range["persen"] = round(((range["total"] / range["total"].sum()) * 100), 2)
     return data, range
 
 
