@@ -62,7 +62,7 @@ def fetch_jenis_kelamin_data():
 def fetch_gelar_data():
     data = fetch_by_gelar()
     data = data.astype({"total": int})
-    data["persen"] = round(((data["total"] / data["total"].sum()) * 100), 2)
+    data["persen"] = round(((data["total"] / data["total"].sum()) * 100), 1)
     return data
 
 
