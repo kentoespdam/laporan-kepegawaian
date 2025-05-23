@@ -1,13 +1,16 @@
-import os
-from dotenv import load_dotenv
 import logging
+import os
+
 import pymysql
 import pymysqlpool
+from dotenv import load_dotenv
 
 load_dotenv()
 
 logging.basicConfig(level=os.getenv(
     "LOG_LEVEL"), format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+
+LOKASI = os.getenv("LOKASI")
 
 
 def get_connection_pool(autocommit: bool = False) -> pymysqlpool.Connection:
