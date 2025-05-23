@@ -34,7 +34,7 @@ async def excel(from_date: str, to_date: str, jenis_mutasi: str = Query(None, en
     tahun = now.year
     bulan = get_nama_bulan(now.month)
     result = to_excel(
-        tahun, bulan, from_date, to_date, JENIS_MUTASI[jenis_mutasi].value if jenis_mutasi else None)
+        from_date, to_date, JENIS_MUTASI[jenis_mutasi].value if jenis_mutasi else None)
     if not result:
         return JSONResponse(content=None, status_code=404)
     return StreamingResponse(

@@ -1,9 +1,13 @@
 import io
+import itertools
+
 import pandas as pd
 import swifter  # noqa: F401
+from openpyxl import load_workbook
 
-from core.config import LOKASI
 from core.enums import get_jenis_mutasi_name
+from core.excel_helper import cell_builder, font_style, text_align
+from core.helper import get_nama_bulan
 from core.model.mutasi import fetch_mutasi
 
 
@@ -20,14 +24,62 @@ def _cleanup(df: pd.DataFrame) -> pd.DataFrame:
     df["tmt_berlaku"] = df["tmt_berlaku"].swifter.apply(
         lambda x: x.strftime("%Y-%m-%d") if not pd.isna(x) else None
     )
-    df["lokasi"] = LOKASI
 
     return df
 
 
-def to_excel(tahun: int, bulan: str, from_date: str, to_date: str, jenis_mutasi: int = None) -> io.BytesIO:
-    data= mutasi_data(from_date, to_date, jenis_mutasi)
+def to_excel(from_date: str, to_date: str, jenis_mutasi: int = None) -> io.BytesIO:
+    data = mutasi_data(from_date, to_date, jenis_mutasi)
     if data.empty:
         return None
-    
-    # return io.BytesIO(data.to_excel(io.BytesIO(), index=False, columns=["Jenis Mutasi","NIK"]).getvalue())
+
+    wb = load_workbook('template/template_mutasi.xlsx')
+    ws = wb.active
+
+    title_cell = ws.cell(row=2, column=1)
+    title_cell.value = "Periode: {}-{}-{} s/d {}-{}-{}".format(
+        from_date[8:10],
+        get_nama_bulan(int(from_date[5:7])),
+        from_date[0:4],
+        to_date[8:10],
+        get_nama_bulan(to_date[5:7]),
+        to_date[0:4]
+    )
+    title_cell.font = font_style("bold")
+    title_cell.alignment = text_align("center")
+
+    ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=12)
+
+    row_num = itertools.count(start=5)
+    for urut, row in data.iterrows():
+        col_num = itertools.count(start=1)
+        current_row = next(row_num)
+        cell_builder(ws, current_row, next(col_num),
+                     urut+1, ["bold", "allborder"])
+        cell_builder(ws, current_row, next(col_num),
+                     row["jenis_mutasi"], ["allborder"])
+        cell_builder(ws, current_row, next(col_num),
+                     row["nipam"], ["allborder"])
+        cell_builder(ws, current_row, next(col_num),
+                     row["nama"], ["allborder"])
+        cell_builder(ws, current_row, next(col_num),
+                     row["tmt_berlaku"], ["allborder"])
+        cell_builder(ws, current_row, next(col_num), row["nama_organisasi_lama"],
+                     ["allborder"])
+        cell_builder(ws, current_row, next(col_num),
+                     row["nama_jabatan_lama"], ["allborder"])
+        cell_builder(ws, current_row, next(col_num),
+                     row["nama_golongan_lama"], ["allborder"])
+        cell_builder(ws, current_row, next(col_num), row["nama_organisasi"],
+                     ["allborder"])
+        cell_builder(ws, current_row, next(col_num),
+                     row["nama_jabatan"], ["allborder"])
+        cell_builder(ws, current_row, next(col_num),
+                     row["nama_golongan"], ["allborder"])
+        cell_builder(ws, current_row, next(col_num),
+                     row["notes"], ["allborder"])
+
+        stream = io.BytesIO()
+        wb.save(stream)
+        stream.seek(0)
+        return stream
