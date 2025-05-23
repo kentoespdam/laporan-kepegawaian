@@ -79,7 +79,7 @@ def to_excel(from_date: str, to_date: str, jenis_mutasi: int = None) -> io.Bytes
         cell_builder(ws, current_row, next(col_num),
                      row["notes"], ["allborder"])
 
-        stream = io.BytesIO()
-        wb.save(stream)
-        stream.seek(0)
-        return stream
+    stream = io.BytesIO()
+    wb.save(stream)
+    stream.seek(0)
+    return stream
