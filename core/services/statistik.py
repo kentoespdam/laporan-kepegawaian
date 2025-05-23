@@ -80,7 +80,7 @@ def fetch_status_pegawai_data():
         lambda x: get_status_pegawai_name(x)
     )
     data = data.astype({"total": int})
-    data["persen"] = round(((data["total"] / data["total"].sum()) * 100), 2)
+    data["persen"] = (data["total"] / data["total"].sum()) * 100
     # sort data by status_pegawai
     data = data.sort_values(by="status_pegawai", ascending=False)
     return data
