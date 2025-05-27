@@ -15,21 +15,16 @@ router = APIRouter(
 
 
 @router.get("/{from_date}/{to_date}")
-async def index(from_date: str, to_date: str, jenis_mutasi: str = Query(None, enum=[
-    "PENGANGKATAN_PERTAMA", "MUTASI_LOKER", "MUTASI_JABATAN", "MUTASI_GOLONGAN", "MUTASI_GAJI", "MUTASI_GAJI_BERKALA", "TERMINASI"
-])):
-
+async def index(from_date: str, to_date: str, jenis_mutasi: str = Query(None, enum=list(jenis.name for jenis in JENIS_MUTASI))):
     result = mutasi_data(
-        from_date, to_date, JENIS_MUTASI[jenis_mutasi].value if jenis_mutasi else None)
+        from_date, to_date, JENIS_MUTASI[jenis_mutasi].value[0] if jenis_mutasi else None)
     if result.empty:
         return JSONResponse(content=None, status_code=404)
     return JSONResponse(content=result.to_dict("records"), status_code=200)
 
 
 @router.get("/excel/{from_date}/{to_date}")
-async def excel(from_date: str, to_date: str, jenis_mutasi: str = Query(None, enum=[
-    "PENGANGKATAN_PERTAMA", "MUTASI_LOKER", "MUTASI_JABATAN", "MUTASI_GOLONGAN", "MUTASI_GAJI", "MUTASI_GAJI_BERKALA", "TERMINASI"
-])):
+async def excel(from_date: str, to_date: str, jenis_mutasi: str = Query(None, enum=list(jenis.name for jenis in JENIS_MUTASI))):
     now = date.today()
     tahun = now.year
     bulan = get_nama_bulan(now.month)
