@@ -9,6 +9,7 @@ class STATUS_PEGAWAI(Enum):
     HONORER = 4
     NON_PEGAWAI = 5
 
+
 def get_status_pegawai_name(id):
     switcher = {
         0: "Pegawai Kontak",
@@ -20,6 +21,7 @@ def get_status_pegawai_name(id):
     }
     return switcher.get(id, "Invalid ID")
 
+
 class STATUS_KERJA(Enum):
     BERHENTI_OR_KELUAR = 0
     DIRUMAHKAN = 1
@@ -30,14 +32,16 @@ class STATUS_KERJA(Enum):
     DIREKOMENDASIKAN = 6
     DITOLAK = 7
 
+
 class JENIS_MUTASI(Enum):
-    PENGANGKATAN_PERTAMA=0
-    MUTASI_LOKER=1
-    MUTASI_JABATAN=2
-    MUTASI_GOLONGAN=3
-    MUTASI_GAJI=4
-    MUTASI_GAJI_BERKALA=5
-    TERMINASI=6
+    PENGANGKATAN_PERTAMA = 0
+    MUTASI_LOKER = 1
+    MUTASI_JABATAN = 2
+    MUTASI_GOLONGAN = 3
+    MUTASI_GAJI = 4
+    MUTASI_GAJI_BERKALA = 5
+    TERMINASI = 6
+
 
 def get_jenis_mutasi_name(id):
     switcher = {
@@ -48,5 +52,31 @@ def get_jenis_mutasi_name(id):
         4: "Mutasi Gaji",
         5: "Mutasi Gaji Berkala",
         6: "Terminasi"
+    }
+    return switcher.get(id, "Invalid ID")
+
+
+class JENIS_SK(Enum):
+    SK_KENAIKAN_PANGKAT_GOLONGAN = 0
+    SK_CAPEG = 1
+    SK_PEGAWAI_TETAP = 2
+    SK_JABATAN = 3
+    SK_MUTASI = 4
+    SK_PENSIUN = 5
+    SK_LAINNYA = 6
+    SK_PENYESUAIAN_GAJI = 7
+    SK_KENAIKAN_GAJI_BERKALA = 8
+
+def get_jenis_sk_name(id):
+    switcher = {
+        0: "SK Kenaikan Pangkat/Golongan",
+        1: "SK Calon Pegawai",
+        2: "SK Pegawai Tetap",
+        3: "SK Jabatan",
+        4: "SK Mutasi Lokasi Kerja",
+        5: "SK Pensiun",
+        6: "SK Lainnya",
+        7: "SK Penyesuaian Gaji",
+        8: "SK Kenaikan Gaji Berkala"
     }
     return switcher.get(id, "Invalid ID")
