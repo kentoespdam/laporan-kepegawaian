@@ -2,7 +2,7 @@ from enum import Enum
 import pandas as pd
 from core.config import get_connection_pool
 from core.enums import STATUS_KERJA, STATUS_PEGAWAI
-from icecream import ic
+
 
 class FILTER_KONTRAK(Enum):
     AKTIF = 0
@@ -71,7 +71,6 @@ def fetch_kontrak(filter: FILTER_KONTRAK = FILTER_KONTRAK.AKTIF) -> pd.DataFrame
         sql += """
             AND peg.status_kerja = %s
         """
-    ic(sql % where)
     with get_connection_pool() as conn:
         with conn.cursor() as cursor:
             cursor.execute(sql, where)
