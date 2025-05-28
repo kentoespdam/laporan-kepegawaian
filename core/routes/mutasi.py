@@ -17,7 +17,7 @@ router = APIRouter(
 @router.get("/{from_date}/{to_date}")
 async def index(from_date: str, to_date: str, jenis_mutasi: str = Query(None, enum=list(jenis.name for jenis in JENIS_MUTASI))):
     result = mutasi_data(
-        from_date, to_date, JENIS_MUTASI[jenis_mutasi].value[0] if jenis_mutasi else None)
+        from_date, to_date, JENIS_MUTASI[jenis_mutasi].value if jenis_mutasi is not None else None)
     if result.empty:
         return JSONResponse(content=None, status_code=404)
     return JSONResponse(content=result.to_dict("records"), status_code=200)
@@ -29,7 +29,7 @@ async def excel(from_date: str, to_date: str, jenis_mutasi: str = Query(None, en
     tahun = now.year
     bulan = get_nama_bulan(now.month)
     result = to_excel(
-        from_date, to_date, JENIS_MUTASI[jenis_mutasi].value if jenis_mutasi else None)
+        from_date, to_date, JENIS_MUTASI[jenis_mutasi].value if jenis_mutasi is not None else None)
     if not result:
         return JSONResponse(content=None, status_code=404)
     return StreamingResponse(
