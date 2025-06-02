@@ -7,8 +7,8 @@ def fetch_mutasi(from_date: str, to_date: str, jenis_mutasi: int = None) -> pd.D
     sql = """
         SELECT
             rm.jenis_mutasi,
-            peg.nipam,
-            bio.nama,
+            rm.nipam,
+            rm.nama,
             rm.tmt_berlaku,
             IFNULL(rm.nama_organisasi_lama,"") AS nama_organisasi_lama,
             IFNULL(rm.nama_jabatan_lama,"") AS nama_jabatan_lama,
@@ -19,8 +19,6 @@ def fetch_mutasi(from_date: str, to_date: str, jenis_mutasi: int = None) -> pd.D
             IFNULL(rm.notes,"") AS notes  
         FROM
             riwayat_mutasi AS rm
-            INNER JOIN pegawai AS peg ON rm.pegawai_id = peg.id
-            INNER JOIN biodata AS bio ON peg.nik = bio.nik 
         WHERE
             rm.tmt_berlaku BETWEEN %s AND %s
     """
