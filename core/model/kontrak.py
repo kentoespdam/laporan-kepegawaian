@@ -1,7 +1,7 @@
-import calendar
-import datetime
 from enum import Enum
+
 import pandas as pd
+
 from core.config import get_connection_pool
 from core.enums import STATUS_KERJA, STATUS_PEGAWAI
 
@@ -16,10 +16,6 @@ class FILTER_KONTRAK(Enum):
 
 
 def fetch_kontrak(filter: FILTER_KONTRAK = FILTER_KONTRAK.AKTIF) -> pd.DataFrame:
-    today = datetime.date.today()
-    last_day_num = calendar.monthrange(today.year, today.month)[1]
-    last_day_date = datetime.date(today.year, today.month, last_day_num)
-
     sql = """
         SELECT
             peg.nipam,
