@@ -79,7 +79,7 @@ def fetch_kontrak(filter: FILTER_KONTRAK = FILTER_KONTRAK.AKTIF) -> pd.DataFrame
     else:
         sql += """
             AND peg.status_kerja = %s
-            AND rk.tanggal_selesai > CURDATE()
+            AND rk.tanggal_selesai >= CURDATE()
         """
 
     with get_connection_pool() as conn:
