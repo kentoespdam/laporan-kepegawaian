@@ -21,7 +21,7 @@ def index(filter: str = Query(FILTER_LEPAS_TANGGUNGAN_ANAK.BULAN_INI.name, enum=
     return JSONResponse(content=data.to_dict("records"), status_code=200)
 
 
-@router.get("/export")
+@router.get("/excel")
 def excel(filter: str = Query(FILTER_LEPAS_TANGGUNGAN_ANAK.BULAN_INI.name, enum=list(filter.name for filter in FILTER_LEPAS_TANGGUNGAN_ANAK))):
     now = datetime.now()
     tahun = now.year
