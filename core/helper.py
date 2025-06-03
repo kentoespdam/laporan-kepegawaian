@@ -1,3 +1,4 @@
+import datetime
 import pandas as pd
 
 BULAN_LIST = [
@@ -42,3 +43,6 @@ def get_agama(agama: int) -> str:
     if agama < 0 or agama >= len(AGAMA_LIST):
         return "Tidak Tahu"
     return AGAMA_LIST[agama]
+
+def format_bulan_to_string(tanggal:datetime.date)->str:
+    return f"{tanggal.day} {get_nama_bulan(tanggal.month)} {tanggal.year}"

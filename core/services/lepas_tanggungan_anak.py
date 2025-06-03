@@ -5,6 +5,7 @@ import pandas as pd
 from openpyxl import load_workbook
 
 from core.excel_helper import cell_builder, font_style, text_align
+from core.helper import format_bulan_to_string
 from core.model.lepas_tanggungan_anak import (
     FILTER_LEPAS_TANGGUNGAN_ANAK,
     fetch_lepas_tanggungan_anak,
@@ -20,7 +21,7 @@ def data_lepas_tanggungan_anak(filter: FILTER_LEPAS_TANGGUNGAN_ANAK = FILTER_LEP
 
 def _cleanup(df: pd.DataFrame):
     df["tanggal_lahir"] = df["tanggal_lahir"].swifter.apply(
-        lambda x: x.strftime("%d-%m-%Y") if x is not None else None)
+        lambda x: format_bulan_to_string(x) if x is not None else None)
     df["tanggungan"] = df["tanggungan"].swifter.apply(
         lambda x: True if x == 1 else False
     )

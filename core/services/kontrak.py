@@ -5,6 +5,7 @@ import pandas as pd
 from openpyxl import load_workbook
 
 from core.excel_helper import cell_builder, font_style, text_align
+from core.helper import format_bulan_to_string
 from core.model.kontrak import FILTER_KONTRAK, fetch_kontrak
 
 
@@ -17,9 +18,9 @@ def kontrak_data(filter: FILTER_KONTRAK = FILTER_KONTRAK.AKTIF):
 
 def _cleanup(pd: pd.DataFrame) -> pd.DataFrame:
     pd["tanggal_mulai"] = pd["tanggal_mulai"].swifter.apply(
-        lambda x: x.strftime("%Y-%m-%d"))
+        lambda x: format_bulan_to_string(x) if x is not None else None)
     pd["tanggal_selesai"] = pd["tanggal_selesai"].swifter.apply(
-        lambda x: x.strftime("%Y-%m-%d"))
+        lambda x: format_bulan_to_string(x) if x is not None else None)
 
     return pd
 

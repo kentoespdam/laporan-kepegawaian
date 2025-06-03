@@ -7,9 +7,8 @@ from openpyxl import load_workbook
 
 from core.enums import get_jenis_mutasi_name
 from core.excel_helper import cell_builder, font_style, text_align
-from core.helper import get_nama_bulan
+from core.helper import format_bulan_to_string, get_nama_bulan
 from core.model.mutasi import fetch_mutasi
-
 
 def mutasi_data(from_date: str, to_date: str, jenis_mutasi: int = None) -> pd.DataFrame:
     data = fetch_mutasi(from_date, to_date, jenis_mutasi)
@@ -22,7 +21,7 @@ def _cleanup(df: pd.DataFrame) -> pd.DataFrame:
     df["jenis_mutasi"] = df["jenis_mutasi"].swifter.apply(
         lambda x: get_jenis_mutasi_name(x))
     df["tmt_berlaku"] = df["tmt_berlaku"].swifter.apply(
-        lambda x: x.strftime("%Y-%m-%d") if not pd.isna(x) else None
+        lambda x: format_bulan_to_string(x) if not pd.isna(x) else None
     )
 
     return df

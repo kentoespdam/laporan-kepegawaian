@@ -7,6 +7,7 @@ from openpyxl import load_workbook
 
 from core.enums import get_jenis_sk_name
 from core.excel_helper import cell_builder, font_style, text_align
+from core.helper import format_bulan_to_string
 from core.model.kenaikan_berkala import FILTER_KENAIKAN_BERKALA, fetch_kenaikan_berkala
 
 
@@ -19,17 +20,17 @@ def kenaikan_berkala_data(filter: FILTER_KENAIKAN_BERKALA = FILTER_KENAIKAN_BERK
 
 def _cleanup(df: pd.DataFrame):
     df["tmt_berlaku"] = df["tmt_berlaku"].swifter.apply(
-        lambda x: x.strftime("%Y-%m-%d")if x is not None else None)
+        lambda x: format_bulan_to_string(x) if x is not None else None)
     df["tmt_kenaikan"] = df["tmt_kenaikan"].swifter.apply(
-        lambda x: x.strftime("%Y-%m-%d")if x is not None else None)
+        lambda x: format_bulan_to_string(x) if x is not None else None)
     df["tmt_jabatan"] = df["tmt_jabatan"].swifter.apply(
-        lambda x: x.strftime("%Y-%m-%d")if x is not None else None)
+        lambda x: format_bulan_to_string(x) if x is not None else None)
     df["tmt_golongan"] = df["tmt_golongan"].swifter.apply(
-        lambda x: x.strftime("%Y-%m-%d")if x is not None else None)
+        lambda x: format_bulan_to_string(x) if x is not None else None)
     df["tmt_kerja"] = df["tmt_kerja"].swifter.apply(
-        lambda x: x.strftime("%Y-%m-%d")if x is not None else None)
+        lambda x: format_bulan_to_string(x) if x is not None else None)
     df["tanggal_lahir"] = df["tanggal_lahir"].swifter.apply(
-        lambda x: x.strftime("%Y-%m-%d")if x is not None else None)
+        lambda x: format_bulan_to_string(x) if x is not None else None)
     df["mkg_bulan"] = df.swifter.apply(
         lambda x: _hitung_bulan(x["mkg_tahun"], x["mkg_bulan"]), axis=1)
     df["mk_bulan"] = df.swifter.apply(
