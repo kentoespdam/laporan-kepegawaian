@@ -1,12 +1,12 @@
 import io
 import itertools
+
+import pandas as pd
 from openpyxl import load_workbook
-from core.excel_helper import cell_builder
+
+from core.excel_helper import cell_builder, save_workbook
 from core.helper import hitung_sisa_bulan
 from core.model.dnp import fetch_dnp
-import pandas as pd
-import swifter  # noqa: F401
-
 from core.model.organisasi import fetch_kode_nama_organisasi
 
 
@@ -23,14 +23,13 @@ def fetch_dnp_data() -> dict[str, pd.DataFrame]:
 
 def _cleanup_dnp_data(dnp_data: pd.DataFrame) -> pd.DataFrame:
     """Clean up DNP data"""
-    dnp_data["mkg_tahun"] = dnp_data["mkg_tahun"].swifter.apply(
-        lambda x: int(x) if x > 0 else 0)
-    dnp_data["mkg_bulan"] = dnp_data.swifter.apply(
-        lambda x: hitung_sisa_bulan(x["mkg_tahun"], x["mkg_bulan"]), axis=1)
-    dnp_data["mk_bulan"] = dnp_data.swifter.apply(
-        lambda x: hitung_sisa_bulan(x["mk_tahun"], x["mk_bulan"]), axis=1)
-    dnp_data["kode_organisasi"] = dnp_data.swifter.apply(
-        lambda x: _change_kode_organisasi(x), axis=1)
+    dnp_data["mkg_tahun"] = dnp_data["mkg_tahun"].fillna(0).clip(lower=0).astype(int)
+    dnp_data["mkg_bulan"] = hitung_sisa_bulan(dnp_data["mkg_tahun"], dnp_data["mkg_bulan"])
+    dnp_data["mk_bulan"] = hitung_sisa_bulan(dnp_data["mk_tahun"], dnp_data["mk_bulan"])
+
+    # cleanup organisasi
+    mask = dnp_data["level_jabatan"].isin([2, 3, 4])
+    dnp_data["kode_organisasi"] = dnp_data["kode_organisasi"].where(~mask, "1")
     return dnp_data
 
 
@@ -42,78 +41,93 @@ def _fetch_organisasi() -> pd.DataFrame:
     return organisasi
 
 
-def _change_kode_organisasi(row: pd.Series) -> str:
-    """Change kode organisasi for Direksi and Direktur"""
-    if row["level_jabatan"] in [2, 3, 4]:
-        return "1"
-    return row["kode_organisasi"]
-
-
-def to_excel(tahun, bulan) -> io.BytesIO:
+def to_excel(tahun: int, bulan: int) -> io.BytesIO:
+    """Generate Excel file from DNP data"""
     df = fetch_dnp_data()
     wb = load_workbook('template/template_dnp.xlsx')
     ws = wb.active
 
+    # Set title
     title_cell = ws.cell(row=2, column=1)
     title_cell.value = f"BULAN : {bulan} {tahun}"
     ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=16)
 
-    root_urut = itertools.count(start=1)
+    # Pre-cache data
+    dnp_df = df["dnp"]
+    organisasi_df = df["organisasi"]
+
+    # Optimasi: buat dictionary untuk lookup pegawai
+    pegawai_by_org = _build_pegawai_lookup(dnp_df)
+
     row_num = itertools.count(start=8)
-    for row in df["organisasi"].itertuples():
+    root_urut = itertools.count(start=1)
+
+    for org_row in organisasi_df.itertuples():
+        # Header organisasi
         curr_row_num = next(row_num)
-        cell_builder(ws, curr_row_num, 1, row.nama, ["bold", "vborder"])
+        cell_builder(ws, curr_row_num, 1, org_row.nama, ["bold", "vborder"])
         ws.merge_cells(start_row=curr_row_num, start_column=1,
                        end_row=curr_row_num, end_column=16)
+
+        # Data pegawai
         child_urut = itertools.count(start=1)
-        for peg in find_pegawai(df["dnp"], row.kode).itertuples():
-            col_num = itertools.count(start=1)
-            current_row = next(row_num)
-            cell_builder(ws, current_row, next(col_num),
-                         next(root_urut), ["allborder"])
-            cell_builder(ws, current_row, next(col_num),
-                         next(child_urut), ["allborder"])
-            cell_builder(ws, current_row, next(col_num),
-                         peg.nama, ["allborder"])
-            cell_builder(ws, current_row, next(col_num),
-                         peg.nipam, ["allborder"])
-            cell_builder(ws, current_row, next(col_num),
-                         peg.nama_jabatan, ["allborder"])
-            cell_builder(ws, current_row, next(col_num),
-                         peg.tmt_jabatan, ["allborder"])
-            cell_builder(ws, current_row, next(col_num),
-                         peg.pangkat, ["allborder"])
-            cell_builder(ws, current_row, next(col_num),
-                         peg.golongan, ["allborder"])
-            cell_builder(ws, current_row, next(col_num),
-                         peg.tmt_golongan, ["allborder"])
-            cell_builder(ws, current_row, next(col_num),
-                         peg.mkg_tahun, ["allborder"])
-            cell_builder(ws, current_row, next(col_num),
-                         peg.mkg_bulan, ["allborder"])
-            cell_builder(ws, current_row, next(col_num),
-                         peg.tmt_kerja, ["allborder"])
-            cell_builder(ws, current_row, next(col_num),
-                         peg.mk_tahun, ["allborder"])
-            cell_builder(ws, current_row, next(col_num),
-                         peg.mk_bulan, ["allborder"])
-            cell_builder(ws, current_row, next(col_num),
-                         peg.pendidikan, ["allborder"])
-            cell_builder(ws, current_row, next(col_num),
-                         peg.ttl, ["allborder"])
-        # create empty row
+        pegawai_data = pegawai_by_org.get(org_row.kode, pd.DataFrame())
+
+        for peg in pegawai_data.itertuples():
+            _add_pegawai_row(ws, next(row_num), next(root_urut), next(child_urut), peg)
+
+        # Empty row separator
         curr_row_num = next(row_num)
         cell_builder(ws, curr_row_num, 1, "", ["vborder"])
         ws.merge_cells(start_row=curr_row_num, start_column=1,
                        end_row=curr_row_num, end_column=16)
 
-    stream = io.BytesIO()
-    wb.save(stream)
-    stream.seek(0)
-    return stream
+    return save_workbook(wb)
 
 
-def find_pegawai(df: pd.DataFrame, kode_organisasi: str) -> pd.DataFrame:
-    if kode_organisasi == "1":
-        return df[df["kode_organisasi"] == "1"]
-    return df.query("kode_organisasi.str.startswith(@kode_organisasi)")
+def _build_pegawai_lookup(dnp_df: pd.DataFrame) -> dict:
+    """Build lookup dictionary for employees by organization code"""
+    pegawai_by_org = {}
+
+    # Data untuk direksi
+    direksi_data = dnp_df[dnp_df["kode_organisasi"] == "1"]
+    if not direksi_data.empty:
+        pegawai_by_org["1"] = direksi_data
+
+    # Data untuk organisasi lainnya
+    for kode_org in dnp_df["kode_organisasi"].unique():
+        if kode_org == "1":
+            continue
+        org_data = dnp_df[dnp_df["kode_organisasi"].str.startswith(kode_org, na=False)]
+        if not org_data.empty:
+            pegawai_by_org[kode_org] = org_data
+
+    return pegawai_by_org
+
+
+def _add_pegawai_row(ws, row_num: int, root_urut: int, child_urut: int, peg) -> None:
+    """Add employee data row to worksheet"""
+    col_num = itertools.count(start=1)
+
+    # Define column mapping untuk menghindari repetisi
+    columns = [
+        (root_urut, ["allborder"]),
+        (child_urut, ["allborder"]),
+        (peg.nama, ["allborder"]),
+        (peg.nipam, ["allborder"]),
+        (peg.nama_jabatan, ["allborder"]),
+        (peg.tmt_jabatan, ["allborder"]),
+        (peg.pangkat, ["allborder"]),
+        (peg.golongan, ["allborder"]),
+        (peg.tmt_golongan, ["allborder"]),
+        (peg.mkg_tahun, ["allborder"]),
+        (peg.mkg_bulan, ["allborder"]),
+        (peg.tmt_kerja, ["allborder"]),
+        (peg.mk_tahun, ["allborder"]),
+        (peg.mk_bulan, ["allborder"]),
+        (peg.pendidikan, ["allborder"]),
+        (peg.ttl, ["allborder"])
+    ]
+
+    for value, styles in columns:
+        cell_builder(ws, row_num, next(col_num), value, styles)

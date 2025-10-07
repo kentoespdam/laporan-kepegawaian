@@ -1,5 +1,5 @@
 from datetime import date
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse, StreamingResponse
 from core.services.duk import duk_data, to_excel
 from core.helper import get_nama_bulan
@@ -14,7 +14,7 @@ router = APIRouter(
 async def index():
     result = duk_data()
     if result.empty:
-        return JSONResponse(content={}, status_code=404)
+        raise HTTPException(status_code=404, detail="Data Not Found")
     return JSONResponse(content=result.to_dict("records"), status_code=200)
 
 

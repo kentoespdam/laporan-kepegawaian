@@ -1,18 +1,15 @@
-import io
-import itertools
-import swifter  # noqa: F401
 import pandas as pd
 from openpyxl import load_workbook
 
-from core.excel_helper import cell_builder, font_style, text_align
-from core.helper import format_bulan_to_string
+from core.excel_helper import font_style, text_align, write_data_to_excel, save_workbook
+from core.helper import format_date_vectorized
 from core.model.lepas_tanggungan_anak import (
-    FILTER_LEPAS_TANGGUNGAN_ANAK,
+    FilterLepasTanggunganAnak,
     fetch_lepas_tanggungan_anak,
 )
 
 
-def data_lepas_tanggungan_anak(filter: FILTER_LEPAS_TANGGUNGAN_ANAK = FILTER_LEPAS_TANGGUNGAN_ANAK.BULAN_INI):
+def data_lepas_tanggungan_anak(filter: FilterLepasTanggunganAnak = FilterLepasTanggunganAnak.BULAN_INI):
     data = fetch_lepas_tanggungan_anak(filter)
     if not data.empty:
         data = _cleanup(data)
@@ -20,17 +17,14 @@ def data_lepas_tanggungan_anak(filter: FILTER_LEPAS_TANGGUNGAN_ANAK = FILTER_LEP
 
 
 def _cleanup(df: pd.DataFrame):
-    df["tanggal_lahir"] = df["tanggal_lahir"].swifter.apply(
-        lambda x: format_bulan_to_string(x) if x is not None else None)
-    df["tanggungan"] = df["tanggungan"].swifter.apply(
-        lambda x: True if x == 1 else False
-    )
+    df["tanggal_lahir"] = format_date_vectorized(df["tanggal_lahir"])
+    df["tanggungan"] = df["tanggungan"].eq(1)
     return df
 
 
-def to_excel(title_text: str, filter: FILTER_LEPAS_TANGGUNGAN_ANAK = FILTER_LEPAS_TANGGUNGAN_ANAK.BULAN_INI):
-    result = data_lepas_tanggungan_anak(filter)
-    if result.empty:
+def to_excel(title_text: str, filter: FilterLepasTanggunganAnak = FilterLepasTanggunganAnak.BULAN_INI):
+    data = data_lepas_tanggungan_anak(filter)
+    if data.empty:
         return None
 
     wb = load_workbook("template/template_lta.xlsx")
@@ -42,30 +36,19 @@ def to_excel(title_text: str, filter: FILTER_LEPAS_TANGGUNGAN_ANAK = FILTER_LEPA
     title_cell.font = font_style("bold")
     ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=9)
 
-    row_num = itertools.count(start=5)
-    for index, row in result.iterrows():
-        col_num = itertools.count(start=1)
-        current_row = next(row_num)
-        cell_builder(ws, current_row, next(col_num),
-                     int(index+1), ["bold", "allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["nama_anak"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["jenis_kelamin"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["tanggal_lahir"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["umur"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["status_pendidikan"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["nama_karyawan"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["nipam"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["nama_jabatan"], ["allborder"])
+    column_mappings = [
+        ("index", lambda idx, _: int(idx + 1), ["bold", "allborder"]),
+        ("nama_anak", lambda _, row: row["nama_anak"], ["allborder"]),
+        ("jenis_kelamin", lambda _, row: row["jenis_kelamin"], ["allborder"]),
+        ("tanggal_lahir", lambda _, row: row["tanggal_lahir"], ["allborder"]),
+        ("umur", lambda _, row: row["umur"], ["allborder"]),
+        ("status_pendidikan", lambda _, row: row["status_pendidikan"], ["allborder"]),
+        ("nama_karyawan", lambda _, row: row["nama_karyawan"], ["allborder"]),
+        ("nipam", lambda _, row: row["nipam"], ["allborder"]),
+        ("nama_jabatan", lambda _, row: row["nama_jabatan"], ["allborder"]),
+    ]
 
-    stream = io.BytesIO()
-    wb.save(stream)
-    stream.seek(0)
-    return stream
+    # Write data to Excel
+    write_data_to_excel(ws, data, column_mappings, 5)
+
+    return save_workbook(wb)

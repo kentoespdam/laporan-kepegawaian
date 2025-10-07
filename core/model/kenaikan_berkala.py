@@ -1,117 +1,160 @@
 import calendar
 from datetime import datetime
-from enum import Enum
+from typing import Tuple
 
 import pandas as pd
-from icecream import ic
 
-from core.config import get_connection_pool
-
-
-class FILTER_KENAIKAN_BERKALA(Enum):
-    BULAN_INI = 0
-    GTE_1 = 1
-    GTE_2 = 2
-    TAHUN_INI = 3
+from core.config import fetch_data
+from core.enums import FilterKenaikanBerkala, JenisSk, StatusKerja, StatusPegawai
 
 
-def fetch_kenaikan_berkala(filter: FILTER_KENAIKAN_BERKALA = FILTER_KENAIKAN_BERKALA.BULAN_INI) -> pd.DataFrame:
-    query = """
-        SELECT
-            rn,
-            id,
-            pegawai_id,
-            nipam,
-            nama,
-            jenis_sk,
-            nomor_sk,
-            tmt_berlaku,
-            tmt_kenaikan,
-            nama_jabatan,
-            tmt_jabatan,
-            golongan,
-            pangkat,
-            tmt_golongan,
-            mkg_tahun,
-            mkg_bulan,
-            tmt_kerja,
-            mk_tahun,
-            mk_bulan,
-            pendidikan_terakhir,
-            tempat_lahir,
-            tanggal_lahir 
-        FROM
-            (
-            SELECT
-                ROW_NUMBER() OVER ( PARTITION BY rs.pegawai_id, rs.jenis_sk ORDER BY tanggal_sk DESC ) AS rn,
-                rs.id,
-                rs.pegawai_id,
-                peg.nipam,
-                bio.nama,
-                rs.jenis_sk,
-                rs.nomor_sk,
-                rs.tmt_berlaku,
-                DATE_ADD( rs.tmt_berlaku, INTERVAL 4 YEAR ) AS tmt_kenaikan,
-                jab.nama AS nama_jabatan,
-                peg.tmt_jabatan,
-                gol.golongan,
-                gol.pangkat,
-                peg.tmt_golongan,
-                TIMESTAMPDIFF(YEAR, peg.tmt_golongan, CURDATE()) AS mkg_tahun,
-                TIMESTAMPDIFF(MONTH, peg.tmt_golongan, CURDATE()) AS mkg_bulan,
-                peg.tmt_kerja AS tmt_kerja,
-                TIMESTAMPDIFF(YEAR, peg.tmt_kerja, CURDATE()) AS mk_tahun,
-                TIMESTAMPDIFF(MONTH, peg.tmt_kerja, CURDATE()) AS mk_bulan,
-                CONCAT_WS( " - ", jp.nama, pend.jurusan ) AS pendidikan_terakhir,
-                bio.tempat_lahir,
-                bio.tanggal_lahir 
-            FROM
-                riwayat_sk AS rs
-                INNER JOIN pegawai AS peg ON rs.pegawai_id = peg.id
-                INNER JOIN biodata AS bio ON peg.nik = bio.nik
-                INNER JOIN golongan AS gol ON peg.golongan_id = gol.id
-                INNER JOIN jabatan AS jab ON peg.jabatan_id = jab.id
-                INNER JOIN pendidikan AS pend ON pend.is_latest = TRUE 
-                AND bio.nik = pend.biodata_id
-                INNER JOIN jenjang_pendidikan AS jp ON pend.jenjang_id = jp.id 
-            WHERE
-                rs.is_deleted = FALSE 
-                AND rs.jenis_sk IN ( 0, 8 ) 
-                AND peg.status_kerja IN ( 1, 2 ) 
-                AND peg.status_pegawai = 2 
-            ) AS rrn 
-        WHERE
-            rrn.rn = 1 
-        """
+def fetch_kenaikan_berkala(filter: FilterKenaikanBerkala = FilterKenaikanBerkala.BULAN_INI) -> pd.DataFrame:
+    """
+    Fetch kenaikan berkala data with optimized query and date calculations.
+    """
+    # Build query based on filter
+    builder = KenaikanBerkalaQueryBuilder()
+    query, params = builder.build_query(filter)
+
+    return fetch_data(query, params)
+
+
+def _get_base_conditions() -> Tuple:
+    """
+    Get base SQL conditions that are common for all filters.
+    """
+    return (
+        False,  # is_deleted
+        (JenisSk.SK_KENAIKAN_PANGKAT_GOLONGAN.value, JenisSk.SK_KENAIKAN_GAJI_BERKALA.value),
+        (StatusKerja.DIRUMAHKAN.value, StatusKerja.KARYAWAN_AKTIF.value),
+        StatusPegawai.PEGAWAI.value
+    )
+
+
+def _get_date_range(filter: FilterKenaikanBerkala) -> Tuple:
+    """
+    Calculate date range based on filter type.
+    Returns tuple of (start_date, end_date) or (year,) for year filter.
+    """
     now = datetime.now()
-    year = now.year
-    month = now.month
+    current_year = now.year
+    current_month = now.month
+
+    if filter == FilterKenaikanBerkala.BULAN_INI:
+        # Current month
+        month = current_month
+        year = current_year
+    elif filter == FilterKenaikanBerkala.GTE_1:
+        # Next month
+        month = current_month + 1
+        year = current_year
+        # Handle year rollover
+        if month > 12:
+            month = 1
+            year += 1
+    elif filter == FilterKenaikanBerkala.GTE_2:
+        # Month after next
+        month = current_month + 2
+        year = current_year
+        # Handle year rollover
+        if month > 12:
+            month = month - 12
+            year += 1
+    elif filter == FilterKenaikanBerkala.TAHUN_INI:
+        # Current year only
+        return (current_year,)
+    else:
+        # Default to current month
+        month = current_month
+        year = current_year
+
+    # Calculate first and last day of the month
     first_day = datetime(year, month, 1).strftime("%Y-%m-%d")
-    last_day = datetime(year, month, calendar.monthrange(
-        year, month)[1]).strftime("%Y-%m-%d")
+    last_day = datetime(year, month, calendar.monthrange(year, month)[1]).strftime("%Y-%m-%d")
 
-    if filter == FILTER_KENAIKAN_BERKALA.BULAN_INI:
-        query += " AND rrn.tmt_kenaikan BETWEEN %s AND %s"
-        where = (first_day, last_day)
-    elif filter == FILTER_KENAIKAN_BERKALA.GTE_1:
-        query += " AND rrn.tmt_kenaikan BETWEEN %s AND %s"
-        first_day = datetime(year, month+1, 1).strftime("%Y-%m-%d")
-        last_day = datetime(year, month+1, calendar.monthrange(
-            year, month+1)[1]).strftime("%Y-%m-%d")
-        where = (first_day, last_day)
-    elif filter == FILTER_KENAIKAN_BERKALA.GTE_2:
-        query += " AND rrn.tmt_kenaikan BETWEEN %s AND %s"
-        first_day = datetime(year, month+2, 1).strftime("%Y-%m-%d")
-        last_day = datetime(year, month+2, calendar.monthrange(
-            year, month+2)[1]).strftime("%Y-%m-%d")
-        where = (first_day, last_day)
-    elif filter == FILTER_KENAIKAN_BERKALA.TAHUN_INI:
-        query += " AND YEAR(rrn.tmt_kenaikan) = %s"
-        where = (year,)
+    return first_day, last_day
 
-    ic(query % where)
-    with get_connection_pool() as conn:
-        with conn.cursor() as cursor:
-            cursor.execute(query, where)
-            result = cursor.fetchall()
-            return pd.DataFrame(result)
+
+def _build_query_with_params(filter: FilterKenaikanBerkala, base_conditions: Tuple, date_range: Tuple) -> Tuple[
+    str, Tuple]:
+    """
+    Build final query with parameters.
+    """
+    base_query = """
+                 WITH ranked_sk
+                          AS (SELECT ROW_NUMBER() OVER (PARTITION BY rs.pegawai_id, rs.jenis_sk ORDER BY rs.tanggal_sk DESC) AS rn,
+                                     rs.id,
+                                     rs.pegawai_id,
+                                     peg.nipam,
+                                     bio.nama,
+                                     rs.jenis_sk,
+                                     rs.nomor_sk,
+                                     rs.tmt_berlaku,
+                                     DATE_ADD(rs.tmt_berlaku, INTERVAL 4 YEAR)                                               AS tmt_kenaikan,
+                                     jab.nama                                                                                AS nama_jabatan,
+                                     peg.tmt_jabatan,
+                                     gol.golongan,
+                                     gol.pangkat,
+                                     peg.tmt_golongan,
+                                     TIMESTAMPDIFF(YEAR, peg.tmt_golongan, CURDATE())                                        AS mkg_tahun,
+                                     TIMESTAMPDIFF(MONTH, peg.tmt_golongan, CURDATE())                                       AS mkg_bulan,
+                                     peg.tmt_kerja,
+                                     TIMESTAMPDIFF(YEAR, peg.tmt_kerja, CURDATE())                                           AS mk_tahun,
+                                     TIMESTAMPDIFF(MONTH, peg.tmt_kerja, CURDATE())                                          AS mk_bulan,
+                                     CONCAT_WS(' - ', jp.nama, pend.jurusan)                                                 AS pendidikan_terakhir,
+                                     bio.tempat_lahir,
+                                     bio.tanggal_lahir
+                              FROM riwayat_sk rs
+                                       INNER JOIN pegawai peg ON rs.pegawai_id = peg.id
+                                       INNER JOIN biodata bio ON peg.nik = bio.nik
+                                       INNER JOIN golongan gol ON peg.golongan_id = gol.id
+                                       INNER JOIN jabatan jab ON peg.jabatan_id = jab.id
+                                       INNER JOIN pendidikan pend ON pend.is_latest = TRUE AND bio.nik = pend.biodata_id
+                                       INNER JOIN jenjang_pendidikan jp ON pend.jenjang_id = jp.id
+                              WHERE rs.is_deleted = %s
+                                AND rs.jenis_sk IN %s
+                                AND peg.status_kerja IN %s
+                                AND peg.status_pegawai = %s)
+                 SELECT *
+                 FROM ranked_sk
+                 WHERE rn = 1 \
+                 """
+
+    if filter in [FilterKenaikanBerkala.BULAN_INI, FilterKenaikanBerkala.GTE_1, FilterKenaikanBerkala.GTE_2]:
+        query = base_query + " AND tmt_kenaikan BETWEEN %s AND %s"
+        params = base_conditions + date_range
+    elif filter == FilterKenaikanBerkala.TAHUN_INI:
+        query = base_query + " AND YEAR(tmt_kenaikan) = %s"
+        params = base_conditions + (date_range[0],)
+    else:
+        query = base_query
+        params = base_conditions
+
+    return query, params
+
+
+class KenaikanBerkalaQueryBuilder:
+    """
+    Query builder for kenaikan berkala with cached date calculations.
+    """
+
+    def __init__(self):
+        self._current_date = None
+        self._date_cache = {}
+
+    def build_query(self, filter: FilterKenaikanBerkala) -> Tuple[str, Tuple]:
+        """
+        Build optimized query with cached date calculations.
+        """
+        if self._current_date != datetime.now().date():
+            self._current_date = datetime.now().date()
+            self._date_cache.clear()
+
+        base_conditions = _get_base_conditions()
+
+        if filter not in self._date_cache:
+            self._date_cache[filter] = _get_date_range(filter)
+
+        date_range = self._date_cache[filter]
+
+        return _build_query_with_params(filter, base_conditions, date_range)

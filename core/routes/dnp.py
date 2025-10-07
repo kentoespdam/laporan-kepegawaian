@@ -1,8 +1,11 @@
 from datetime import date
-from fastapi import APIRouter
+
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse, StreamingResponse
-from core.services.dnp import fetch_dnp_data, to_excel
+
 from core.helper import get_nama_bulan
+from core.services.dnp import fetch_dnp_data, to_excel
+
 router = APIRouter(
     prefix="/dnp",
     tags=["Daftar Nominatif Pegawai"],
@@ -14,7 +17,7 @@ router = APIRouter(
 async def index():
     result = fetch_dnp_data()
     if result["dnp"].empty:
-        return JSONResponse(content={}, status_code=404)
+        raise HTTPException(status_code=404, detail="Data Not Found")
     return JSONResponse(content={
         "data": result["dnp"].to_dict("records"),
         "organisasi": result["organisasi"].to_dict("records")

@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class STATUS_PEGAWAI(Enum):
+class StatusPegawai(Enum):
     KONTRAK = 0
     CAPEG = 1
     PEGAWAI = 2
@@ -10,7 +10,7 @@ class STATUS_PEGAWAI(Enum):
     NON_PEGAWAI = 5
 
 
-def get_status_pegawai_name(id):
+def get_status_pegawai_name(status_pegawai_id: int):
     switcher = {
         0: "Pegawai Kontak",
         1: "Calon Pegawai",
@@ -19,10 +19,10 @@ def get_status_pegawai_name(id):
         4: "Honorer Tetap",
         5: "Non Pegawai"
     }
-    return switcher.get(id, "Invalid ID")
+    return switcher.get(status_pegawai_id, "Invalid ID")
 
 
-class STATUS_KERJA(Enum):
+class StatusKerja(Enum):
     BERHENTI_OR_KELUAR = 0
     DIRUMAHKAN = 1
     KARYAWAN_AKTIF = 2
@@ -33,7 +33,7 @@ class STATUS_KERJA(Enum):
     DITOLAK = 7
 
 
-class JENIS_MUTASI(Enum):
+class JenisMutasi(Enum):
     PENGANGKATAN_PERTAMA = 0
     MUTASI_LOKER = 1
     MUTASI_JABATAN = 2
@@ -43,7 +43,7 @@ class JENIS_MUTASI(Enum):
     TERMINASI = 6
 
 
-def get_jenis_mutasi_name(id):
+def get_jenis_mutasi_name(jenis_mutasi_id):
     switcher = {
         0: "Pengangkatan Pertama",
         1: "Mutasi Lokasi Kerja",
@@ -53,10 +53,10 @@ def get_jenis_mutasi_name(id):
         5: "Mutasi Gaji Berkala",
         6: "Terminasi"
     }
-    return switcher.get(id, "Invalid ID")
+    return switcher.get(jenis_mutasi_id, "Invalid ID")
 
 
-class JENIS_SK(Enum):
+class JenisSk(Enum):
     SK_KENAIKAN_PANGKAT_GOLONGAN = 0
     SK_CAPEG = 1
     SK_PEGAWAI_TETAP = 2
@@ -67,7 +67,8 @@ class JENIS_SK(Enum):
     SK_PENYESUAIAN_GAJI = 7
     SK_KENAIKAN_GAJI_BERKALA = 8
 
-def get_jenis_sk_name(id):
+
+def get_jenis_sk_name(jenis_sk_id):
     switcher = {
         0: "SK Kenaikan Pangkat/Golongan",
         1: "SK Calon Pegawai",
@@ -79,4 +80,10 @@ def get_jenis_sk_name(id):
         7: "SK Penyesuaian Gaji",
         8: "SK Kenaikan Gaji Berkala"
     }
-    return switcher.get(id, "Invalid ID")
+    return switcher.get(jenis_sk_id, "Invalid ID")
+
+class FilterKenaikanBerkala(Enum):
+    BULAN_INI = 0
+    GTE_1 = 1
+    GTE_2 = 2
+    TAHUN_INI = 3

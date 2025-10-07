@@ -1,15 +1,12 @@
-import io
-import itertools
-import swifter  # noqa: F401
 import pandas as pd
 from openpyxl import load_workbook
 
-from core.excel_helper import cell_builder, font_style, text_align
-from core.helper import format_bulan_to_string
-from core.model.kontrak import FILTER_KONTRAK, fetch_kontrak
+from core.excel_helper import font_style, text_align, write_data_to_excel, save_workbook
+from core.helper import format_date_vectorized
+from core.model.kontrak import FilterKontrak, fetch_kontrak
 
 
-def kontrak_data(filter: FILTER_KONTRAK = FILTER_KONTRAK.AKTIF):
+def kontrak_data(filter: FilterKontrak = FilterKontrak.AKTIF):
     data = fetch_kontrak(filter)
     if not data.empty:
         data = _cleanup(data)
@@ -17,15 +14,12 @@ def kontrak_data(filter: FILTER_KONTRAK = FILTER_KONTRAK.AKTIF):
 
 
 def _cleanup(pd: pd.DataFrame) -> pd.DataFrame:
-    pd["tanggal_mulai"] = pd["tanggal_mulai"].swifter.apply(
-        lambda x: format_bulan_to_string(x) if x is not None else None)
-    pd["tanggal_selesai"] = pd["tanggal_selesai"].swifter.apply(
-        lambda x: format_bulan_to_string(x) if x is not None else None)
-
+    pd["tanggal_mulai"] = format_date_vectorized(pd["tanggal_mulai"])
+    pd["tanggal_selesai"] = format_date_vectorized(pd["tanggal_selesai"])
     return pd
 
 
-def to_excel(title_text: str, filter: FILTER_KONTRAK = FILTER_KONTRAK.AKTIF):
+def to_excel(title_text: str, filter: FilterKontrak = FilterKontrak.AKTIF):
     data = kontrak_data(filter)
     if data.empty:
         return None
@@ -39,30 +33,19 @@ def to_excel(title_text: str, filter: FILTER_KONTRAK = FILTER_KONTRAK.AKTIF):
     title_cell.font = font_style("bold")
     ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=9)
 
-    row_num = itertools.count(start=5)
-    for index, row in data.iterrows():
-        col_num = itertools.count(start=1)
-        current_row = next(row_num)
-        cell_builder(ws, current_row, next(col_num),
-                     int(index+1), ["bold", "allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["nipam"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["nama"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["nomor_kontrak"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["nama_organisasi"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["nama_jabatan"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["tanggal_mulai"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["tanggal_selesai"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["sisa_bulan"], ["allborder"])
+    column_mappings = [
+        ("index", lambda idx, _: int(idx + 1), ["bold", "allborder"]),
+        ("nipam", lambda _, row: row["nipam"], ["allborder"]),
+        ("nama", lambda _, row: row["nama"], ["allborder"]),
+        ("nomor_kontrak", lambda _, row: row["nomor_kontrak"], ["allborder"]),
+        ("nama_organisasi", lambda _, row: row["nama_organisasi"], ["allborder"]),
+        ("nama_jabatan", lambda _, row: row["nama_jabatan"], ["allborder"]),
+        ("tanggal_mulai", lambda _, row: row["tanggal_mulai"], ["allborder"]),
+        ("tanggal_selesai", lambda _, row: row["tanggal_selesai"], ["allborder"]),
+        ("sisa_bulan", lambda _, row: row["sisa_bulan"], ["allborder"]),
+    ]
 
-    stream = io.BytesIO()
-    wb.save(stream)
-    stream.seek(0)
-    return stream
+    # Write data to Excel
+    write_data_to_excel(ws, data, column_mappings, 5)
+
+    return save_workbook(wb)

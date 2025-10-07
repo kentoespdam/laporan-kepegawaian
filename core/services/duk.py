@@ -1,12 +1,11 @@
 import io
-import itertools
-from openpyxl import load_workbook
-from core.enums import get_status_pegawai_name
-from core.excel_helper import cell_builder
+
 import pandas as pd
-from core.helper import hitung_sisa_bulan
+from openpyxl import load_workbook
+
+from core.excel_helper import write_data_to_excel, save_workbook
+from core.helper import hitung_sisa_bulan, format_date_series, get_status_pegawai
 from core.model.duk import fetch_duk
-import swifter  # noqa: F401
 
 
 def duk_data():
@@ -16,66 +15,46 @@ def duk_data():
 
 
 def cleanup(df: pd.DataFrame) -> pd.DataFrame:
-    df["tmt_golongan"] = df["tmt_golongan"].swifter.apply(
-        lambda x: x.strftime("%d.%m.%Y") if x is not None else None)
-    df["tmt_jabatan"] = df["tmt_jabatan"].swifter.apply(
-        lambda x: x.strftime("%d.%m.%Y") if x is not None else None)
-    df["tmt_kerja"] = df["tmt_kerja"].swifter.apply(
-        lambda x: x.strftime("%d.%m.%Y") if x is not None else None)
-    df["mk_bulan"] = df.swifter.apply(
-        lambda x: hitung_sisa_bulan(x["mk_tahun"], x["mk_bulan"]), axis=1)
-    df["status_pegawai"] = df["status_pegawai"].swifter.apply(
-        lambda x: get_status_pegawai_name(x))
+    df["tmt_golongan"] = format_date_series(df["tmt_golongan"])
+    df["tmt_jabatan"] = format_date_series(df["tmt_jabatan"])
+    df["tmt_kerja"] = format_date_series(df["tmt_kerja"])
+    df["mk_bulan"] = hitung_sisa_bulan(df["mk_tahun"], df["mk_bulan"])
+    df["status_pegawai"] = get_status_pegawai(df["status_pegawai"])
     return df
 
 
-def to_excel(tahun, bulan) -> io.BytesIO:
+def to_excel(tahun: int, bulan: str) -> io.BytesIO:
+    """Generate Excel file from DUK data"""
     data = duk_data()
     wb = load_workbook('template/template_duk.xlsx')
     ws = wb.active
 
+    # Set title
     title_cell = ws.cell(row=2, column=1)
     title_cell.value = f"BULAN : {bulan} {tahun}"
     ws.merge_cells(start_row=2, start_column=1, end_row=2, end_column=16)
 
-    row_num = itertools.count(start=7)
-    for index, row in data.iterrows():
-        col_num = itertools.count(start=1)
-        current_row = next(row_num)
-        cell_builder(ws, current_row, next(col_num),
-                     int(index+1), ["bold", "allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["nama"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["nipam"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["golongan"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["pangkat"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["tmt_golongan"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["nama_jabatan"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["tmt_jabatan"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["tmt_kerja"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["mk_tahun"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["mk_bulan"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["jurusan"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["tahun_lulus"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["tingkat_pendidikan"], ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     int(row["usia"]),  ["allborder"])
-        cell_builder(ws, current_row, next(col_num),
-                     row["status_pegawai"], ["allborder"])
+    # Define column mappings for cleaner code
+    column_mappings = [
+        ("index", lambda idx, _: int(idx + 1), ["bold", "allborder"]),
+        ("nama", lambda _, row: row["nama"], ["allborder"]),
+        ("nipam", lambda _, row: row["nipam"], ["allborder"]),
+        ("golongan", lambda _, row: row["golongan"], ["allborder"]),
+        ("pangkat", lambda _, row: row["pangkat"], ["allborder"]),
+        ("tmt_golongan", lambda _, row: row["tmt_golongan"], ["allborder"]),
+        ("nama_jabatan", lambda _, row: row["nama_jabatan"], ["allborder"]),
+        ("tmt_jabatan", lambda _, row: row["tmt_jabatan"], ["allborder"]),
+        ("tmt_kerja", lambda _, row: row["tmt_kerja"], ["allborder"]),
+        ("mk_tahun", lambda _, row: row["mk_tahun"], ["allborder"]),
+        ("mk_bulan", lambda _, row: row["mk_bulan"], ["allborder"]),
+        ("jurusan", lambda _, row: row["jurusan"], ["allborder"]),
+        ("tahun_lulus", lambda _, row: row["tahun_lulus"], ["allborder"]),
+        ("tingkat_pendidikan", lambda _, row: row["tingkat_pendidikan"], ["allborder"]),
+        ("usia", lambda _, row: row["usia"], ["allborder"]),
+        ("status_pegawai", lambda _, row: row["status_pegawai"], ["allborder"])
+    ]
 
-    stream = io.BytesIO()
-    wb.save(stream)
-    stream.seek(0)
-    return stream
+    # Write data to Excel
+    write_data_to_excel(ws, data, column_mappings, 7)
+
+    return save_workbook(wb)

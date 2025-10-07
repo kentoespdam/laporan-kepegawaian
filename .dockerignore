@@ -3,5 +3,5 @@
 dockerignore
 docker-compose.yaml
 Dockerfile
-test*
+tests
 *__pycache__*

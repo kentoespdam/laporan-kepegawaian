@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.templating import Jinja2Templates
 
@@ -17,5 +17,5 @@ templates = Jinja2Templates(directory="core/views")
 async def index():
     data_so = fetch_struktur_organisasi()
     if data_so.empty:
-        return JSONResponse(content={}, status_code=404)
+        raise HTTPException(status_code=404, detail="Not found")
     return JSONResponse(content=data_so.to_dict("records"), status_code=200)

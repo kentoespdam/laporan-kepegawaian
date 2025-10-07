@@ -1,8 +1,11 @@
 import logging
 import os
 
-import pymysql
+import pandas as pd
 import pymysqlpool
+from icecream import ic
+from pymysql.cursors import DictCursor
+from pymysqlpool import Connection, ConnectionPool
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -13,7 +16,7 @@ logging.basicConfig(level=os.getenv(
 LOKASI = os.getenv("LOKASI")
 
 
-def get_connection_pool(autocommit: bool = False) -> pymysqlpool.Connection:
+def get_connection_pool(autocommit: bool = False) -> Connection:
     """
     Return a connection from a pool of connections to the database.
 
@@ -44,9 +47,9 @@ def get_connection_pool(autocommit: bool = False) -> pymysqlpool.Connection:
         'password': os.getenv('DB_PASS'),
         'database': os.getenv('DB_NAME'),
         'charset': 'utf8mb4',
-        'cursorclass': pymysql.cursors.DictCursor
+        'cursorclass': DictCursor
     }
-    return pymysqlpool.ConnectionPool(
+    return ConnectionPool(
         size=10,
         maxsize=15,
         pre_create_num=2,
@@ -54,3 +57,12 @@ def get_connection_pool(autocommit: bool = False) -> pymysqlpool.Connection:
         autocommit=autocommit,
         **config
     ).get_connection()
+
+
+def fetch_data(query: str, params: tuple | dict | None = None) -> pd.DataFrame:
+    with get_connection_pool() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(query, params)
+            columns = [column[0] for column in cursor.description] if cursor.description else None
+            rows = cursor.fetchall()
+            return pd.DataFrame(rows, columns=columns)
