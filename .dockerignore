@@ -1,7 +1,7 @@
-.git
 .venv
-dockerignore
-docker-compose.yaml
-Dockerfile
-tests
-*__pycache__*
+logs/*
+/tests/
+.git
+.gitignore
+.Dockerfile
+docker-compose.yml

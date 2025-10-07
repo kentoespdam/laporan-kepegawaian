@@ -1,18 +1,7 @@
-FROM python:3.12.9-slim-bookworm AS base
+FROM ghcr.io/astral-sh/uv:debian-slim
 WORKDIR /app
 
-FROM base AS builder
-WORKDIR /app
-COPY wheelhouse ./wheelhouse
-COPY requirement.txt .
-RUN pip install --no-cache-dir --find-links=wheelhouse --only-binary=:all: -r requirement.txt
-
-FROM base AS runner
-WORKDIR /app
-COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
-COPY --from=builder /usr/local/bin /usr/local/bin
 COPY . .
-RUN mkdir logs result_excel
-RUN touch logs/laporan.log
-RUN rm -rf wheelhouse
-CMD ["fastapi","run", "main.py", "--port", "80"]
+RUN uv sync --no-cache --frozen --no-dev
+
+CMD ["uv", "run", "main.py"]
