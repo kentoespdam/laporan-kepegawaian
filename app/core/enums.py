@@ -46,3 +46,16 @@ class FilterKenaikanBerkala(Enum):
     GTE_1 = 1
     GTE_2 = 2
     TAHUN_INI = 3
+
+class HubunganKeluarga(Enum):
+    SUAMI = 0
+    ISTRI = 1
+    AYAH = 2
+    IBU = 3
+    ANAK = 4
+    SAUDARA = 5
+
+class StatusPendidikan(Enum):
+    BELUM_SEKOLAH = 0
+    SEKOLAH = 1
+    SELESAI_SEKOLAH = 2

@@ -1,11 +1,12 @@
-import calendar
 from datetime import datetime
 from enum import Enum
+from typing import Tuple
 
 import pandas as pd
-from icecream import ic
+from markdown_it.parser_block import LOGGER
 
 from app.core.config import fetch_data
+from app.core.enums import HubunganKeluarga, StatusKerja, StatusPendidikan
 
 
 class FilterLepasTanggunganAnak(Enum):
@@ -15,50 +16,74 @@ class FilterLepasTanggunganAnak(Enum):
 
 
 def fetch_lepas_tanggungan_anak(
-        filter: FilterLepasTanggunganAnak = FilterLepasTanggunganAnak.BULAN_INI) -> pd.DataFrame:
-    """Fetch anak karyawan yang berhak menerima tunjangan lepas tanggungan"""
-    now = datetime.now()
-    year = now.year
-    month = now.month
+        filter_type: FilterLepasTanggunganAnak = FilterLepasTanggunganAnak.BULAN_INI) -> pd.DataFrame:
+    """Fetch anak karyawan dengan perhitungan umur berdasarkan tanggal referensi bulan ini."""
 
-    if filter == FilterLepasTanggunganAnak.GTE_1:
-        month += 1
-    elif filter == FilterLepasTanggunganAnak.GTE_2:
-        month += 2
+    target_month, target_year = _get_target_month_year(filter_type)
+    min_umur, max_umur = 21, 26
 
-    first_day = datetime(year, month, 1).strftime("%Y-%m-%d")
-    last_day = datetime(year, month, calendar.monthrange(
-        year, month)[1]).strftime("%Y-%m-%d")
-
+    # Query yang lebih sederhana dengan DATE_FORMAT untuk perhitungan umur konsisten
     query = """
             SELECT pk.id,
                    pk.nama                                      AS nama_anak,
                    IF(pk.jenis_kelamin = 0, 'Pria', 'Wanita')   AS jenis_kelamin,
-                   pk.tanggal_lahir                             AS tanggal_lahir,
-                   TIMESTAMPDIFF(YEAR, pk.tanggal_lahir, now()) AS umur,
+                   pk.tanggal_lahir,
+                   TIMESTAMPDIFF(YEAR, pk.tanggal_lahir, NOW()) AS umur,
                    pk.tanggungan,
-                   CASE
-                       WHEN pk.status_pendidikan = 0 THEN 'Belum Sekolah'
-                       WHEN pk.status_pendidikan = 1 THEN 'Sekolah'
+                   CASE pk.status_pendidikan
+                       WHEN 0 THEN 'Belum Sekolah'
+                       WHEN 1 THEN 'Sekolah'
                        ELSE 'Selesai Sekolah'
                        END                                      AS status_pendidikan,
                    bio.nama                                     AS nama_karyawan,
                    peg.nipam                                    AS nipam,
                    jab.nama                                     AS nama_jabatan
-            FROM profil_keluarga AS pk
-                     INNER JOIN biodata AS bio ON pk.biodata_id = bio.nik
-                     INNER JOIN pegawai AS peg ON bio.nik = peg.nik
-                     INNER JOIN jabatan AS jab ON peg.jabatan_id = jab.id
-            WHERE peg.status_kerja IN %s
-              AND pk.status_kawin = %s
+            FROM profil_keluarga pk
+                     INNER JOIN biodata bio
+                                ON pk.biodata_id = bio.nik
+                     INNER JOIN pegawai peg ON bio.nik = peg.nik AND peg.is_deleted = FALSE
+                     INNER JOIN jabatan jab ON peg.jabatan_id = jab.id
+            WHERE peg.status_kerja IN (%s, %s)
               AND pk.hubungan_keluarga = %s
-              AND pk.tanggungan = %s
-              AND (
-                (DATE_ADD(pk.tanggal_lahir, INTERVAL 26 YEAR) BETWEEN %s AND %s)
-                    OR (DATE_ADD(pk.tanggal_lahir, INTERVAL 21 YEAR) BETWEEN %s AND %s)
-                ) \
+              AND pk.status_pendidikan != %s
+              AND MONTH(pk.tanggal_lahir) = %s
+              AND TIMESTAMPDIFF(YEAR
+                , pk.tanggal_lahir
+                , STR_TO_DATE(CONCAT(%s, '-', %s, '-15'), '%%Y-%%m-%%d')
+                  ) BETWEEN %s
+                AND %s
             """
-    where = ((1, 2), 0, 4, True, first_day, last_day, first_day, last_day)
-    ic(query % where)
 
-    return fetch_data(query, where)
+    params = (
+        StatusKerja.DIRUMAHKAN.value,
+        StatusKerja.KARYAWAN_AKTIF.value,
+        HubunganKeluarga.ANAK.value,
+        StatusPendidikan.SELESAI_SEKOLAH.value,
+        target_month,  # filter bulan lahir
+        target_year, target_month,  # untuk perhitungan umur
+        min_umur,
+        max_umur
+    )
+
+    try:
+        result = fetch_data(query, params)
+        return result
+    except Exception as e:
+        LOGGER.error(f"Error fetching data: {e}")
+        return pd.DataFrame()
+
+
+def _get_target_month_year(filter_type: FilterLepasTanggunganAnak) -> Tuple[int, int]:
+    """Get target month dan year dengan handling year rollover yang lebih robust."""
+    now = datetime.now()
+    current_year = now.year
+    current_month = now.month
+
+    adjustment = filter_type.value
+
+    # Calculate target month and year
+    total_months = current_month + adjustment
+    target_year = current_year + (total_months - 1) // 12
+    target_month = (total_months - 1) % 12 + 1
+
+    return target_month, target_year
