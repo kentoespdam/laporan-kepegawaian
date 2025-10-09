@@ -3,5 +3,6 @@
   <component name="DataSourcePerFileMappings">
     <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/bd8fb323-9e46-4e36-8098-2819083219e1/console.sql" value="bd8fb323-9e46-4e36-8098-2819083219e1" />
     <file url="file://$PROJECT_DIR$/app/models/kenaikan_berkala.py" value="bd8fb323-9e46-4e36-8098-2819083219e1" />
+    <file url="file://$PROJECT_DIR$/app/models/statistik.py" value="bd8fb323-9e46-4e36-8098-2819083219e1" />
   </component>
 </project>

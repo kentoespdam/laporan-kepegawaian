@@ -4,9 +4,8 @@ from typing import Optional
 import pandas as pd
 from openpyxl.reader.excel import load_workbook
 
-from app.core.enums import get_status_pegawai_name
 from app.core.excel_helper import cell_builder, write_data_to_excel, save_workbook
-from app.core.helper import get_agama, get_nama_bulan
+from app.core.helper import get_nama_bulan, get_agama_vectorize, get_status_pegawai_vectorize
 from app.models.statistik import (
     fetch_by_agama,
     fetch_by_gelar,
@@ -143,7 +142,7 @@ def fetch_gelar_data():
 
 def fetch_agama_data():
     data = fetch_by_agama()
-    data["agama"] = data["agama"].apply(lambda x: get_agama(x))
+    data["agama"] = get_agama_vectorize(data["agama"])
     data = data.astype({"total": int})
     data["persen"] = round(((data["total"] / data["total"].sum()) * 100), 2)
     return data
@@ -151,11 +150,9 @@ def fetch_agama_data():
 
 def fetch_status_pegawai_data():
     data = fetch_by_status_pegawai()
-    data["status_pegawai"] = data["status_pegawai"].apply(
-        lambda x: get_status_pegawai_name(x)
-    )
+    data["status_pegawai"] = get_status_pegawai_vectorize(data["status_pegawai"])
     data = data.astype({"total": int})
-    data["persen"] = (data["total"] / data["total"].sum()) * 100
+    data["persen"] = round((data["total"] / data["total"].sum()) * 100, 2)
     # sort data by status_pegawai
     data = data.sort_values(by="status_pegawai", ascending=False)
     return data

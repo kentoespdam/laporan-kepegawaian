@@ -3,7 +3,7 @@ services:
     container_name: laporan-kepegawaian
     build: .
     ports:
-      - "82:80"
+      - "82:8000"
     env_file:
       - .env
     restart: unless-stopped

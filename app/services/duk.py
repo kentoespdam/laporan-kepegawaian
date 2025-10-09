@@ -4,7 +4,7 @@ import pandas as pd
 from openpyxl import load_workbook
 
 from app.core.excel_helper import write_data_to_excel, save_workbook
-from app.core.helper import hitung_sisa_bulan, format_date_series, get_status_pegawai
+from app.core.helper import hitung_sisa_bulan, format_date_series, get_status_pegawai_vectorize
 from app.models.duk import fetch_duk
 
 
@@ -19,7 +19,7 @@ def cleanup(df: pd.DataFrame) -> pd.DataFrame:
     df["tmt_jabatan"] = format_date_series(df["tmt_jabatan"])
     df["tmt_kerja"] = format_date_series(df["tmt_kerja"])
     df["mk_bulan"] = hitung_sisa_bulan(df["mk_tahun"], df["mk_bulan"])
-    df["status_pegawai"] = get_status_pegawai(df["status_pegawai"])
+    df["status_pegawai"] = get_status_pegawai_vectorize(df["status_pegawai"])
     return df
 
 

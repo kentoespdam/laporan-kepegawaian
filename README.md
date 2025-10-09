@@ -15,16 +15,6 @@ mkdir -p templates docs scripts logs
 find laporan_kepegawaian tests -type d -exec touch {}/__init__.py \;
 ```
 
-# 4. Install dependencies
-```shell
-uv sync --all-groups
-```
-
-# 5. Jalankan aplikasi
-```shell
-uv run dev
-```
-
 ---
 
 # Environment
@@ -37,22 +27,26 @@ DB_NAME=kepegawaian
 DB_USER=root
 DB_PASS=
 
-
 LOKASI='Kantor Pusat PDAM TIRTA SATRIA'
 ```
 
 ---
+
 # Installation
 ```shell
 # Install semua dependencies
-uv sync
+uv sync --no-cache --frozen 
 
 # Install tanpa dev dependencies
-uv sync --no-dev
+uv sync --no-cache --frozen --no-dev
 
 # install group dev dependencies
 uv sync --group dev
 
+```
+
+# Running App
+```shell
 # dev 
 uv run uvicorn app.main:app --reload --port 8080
 

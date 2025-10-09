@@ -35,40 +35,45 @@ def fetch_kontrak(filter: FilterKontrak = FilterKontrak.AKTIF) -> pd.DataFrame:
           WHERE rk.nomor_kontrak IS NOT NULL
             AND peg.status_pegawai = %s \
           """
-    where = (StatusPegawai.KONTRAK.value,
-             StatusKerja.KARYAWAN_AKTIF.value,)
+    where = (StatusPegawai.KONTRAK.value,)
     if filter == FilterKontrak.THIS_MONTH:
         sql += """
             AND peg.status_kerja = %s
             AND YEAR(rk.tanggal_selesai)=YEAR(CURDATE())
             AND MONTH(rk.tanggal_selesai)=MONTH(CURDATE())
         """
+        where += (StatusKerja.KARYAWAN_AKTIF.value,)
     elif filter == FilterKontrak.GTE_1_MONTH:
         sql += """
             AND peg.status_kerja = %s
             AND YEAR(rk.tanggal_selesai)=YEAR(CURDATE())
             AND MONTH(rk.tanggal_selesai)=MONTH(CURDATE())+1
         """
+        where += (StatusKerja.KARYAWAN_AKTIF.value,)
     elif filter == FilterKontrak.GTE_2_MONTH:
         sql += """
             AND peg.status_kerja = %s
             AND YEAR(rk.tanggal_selesai)=YEAR(CURDATE())
             AND MONTH(rk.tanggal_selesai)=MONTH(CURDATE())+2
         """
+        where += (StatusKerja.KARYAWAN_AKTIF.value,)
     elif filter == FilterKontrak.GTE_3_MONTH:
         sql += """
             AND peg.status_kerja = %s
             AND YEAR(rk.tanggal_selesai)=YEAR(CURDATE())
             AND MONTH(rk.tanggal_selesai)=MONTH(CURDATE())+3
         """
+        where += (StatusKerja.KARYAWAN_AKTIF.value,)
     elif filter == FilterKontrak.ENDED:
         sql += """
             AND peg.status_kerja IN %s
         """
-        where += ((StatusKerja.DIRUMAHKAN.value, StatusKerja.BERHENTI_OR_KELUAR.value),)
+        where += (tuple([StatusKerja.DIRUMAHKAN.value, StatusKerja.BERHENTI_OR_KELUAR.value]),)
     else:
         sql += """
             AND peg.status_kerja = %s
             AND rk.tanggal_selesai >= CURDATE()
         """
+        where += (StatusKerja.KARYAWAN_AKTIF.value,)
+
     return fetch_data(sql, where)

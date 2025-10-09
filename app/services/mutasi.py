@@ -5,7 +5,7 @@ import pandas as pd
 from openpyxl import load_workbook
 
 from app.core.excel_helper import font_style, text_align, save_workbook, write_data_to_excel
-from app.core.helper import get_nama_bulan, get_jenis_mutasi_name, format_date_vectorized
+from app.core.helper import get_nama_bulan, get_jenis_mutasi_vectorize, format_date_vectorized
 from app.models.mutasi import fetch_mutasi
 
 
@@ -17,7 +17,7 @@ def mutasi_data(from_date: str, to_date: str, jenis_mutasi: int = None) -> pd.Da
 
 
 def _cleanup(df: pd.DataFrame) -> pd.DataFrame:
-    df["jenis_mutasi"] = get_jenis_mutasi_name(df["jenis_mutasi"])
+    df["jenis_mutasi"] = get_jenis_mutasi_vectorize(df["jenis_mutasi"])
     df["tmt_berlaku"] = format_date_vectorized(df["tmt_berlaku"])
 
     return df

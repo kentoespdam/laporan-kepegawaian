@@ -1,3 +1,5 @@
+from typing import Optional, List, Union
+
 import pandas as pd
 
 BULAN_LIST = [
@@ -30,7 +32,7 @@ AGAMA_LIST = [
 DATE_FMT = "%d.%m.%Y"
 
 
-def get_status_pegawai(df: pd.Series):
+def get_status_pegawai_vectorize(df: pd.Series):
     switcher = {
         0: "Pegawai Kontak",
         1: "Calon Pegawai",
@@ -42,7 +44,7 @@ def get_status_pegawai(df: pd.Series):
     return df.map(switcher).fillna("Invalid ID")
 
 
-def get_jenis_sk_name(jenis_sk: pd.Series):
+def get_jenis_sk_vectorize(jenis_sk: pd.Series):
     switcher = {
         0: "SK Kenaikan Pangkat/Golongan",
         1: "SK Calon Pegawai",
@@ -57,7 +59,7 @@ def get_jenis_sk_name(jenis_sk: pd.Series):
     return jenis_sk.map(switcher).fillna("Invalid ID")
 
 
-def get_jenis_mutasi_name(jenis_mutasi: pd.Series):
+def get_jenis_mutasi_vectorize(jenis_mutasi: pd.Series):
     switcher = {
         0: "Pengangkatan Pertama",
         1: "Mutasi Lokasi Kerja",
@@ -70,7 +72,7 @@ def get_jenis_mutasi_name(jenis_mutasi: pd.Series):
     return jenis_mutasi.map(switcher).fillna("Invalid ID")
 
 
-def get_agama(agama: pd.Series):
+def get_agama_vectorize(agama: pd.Series):
     switcher = {
         0: "Tidak Tahu",
         1: "Islam",
@@ -83,7 +85,6 @@ def get_agama(agama: pd.Series):
         8: "Lainnya",
     }
     return agama.map(switcher).fillna("Invalid ID")
-
 
 def get_nama_bulan(bulan):
     return BULAN_LIST[int(bulan) - 1]
@@ -103,7 +104,8 @@ def hitung_sisa_bulan(years: pd.Series, months: pd.Series) -> pd.Series:
 
 
 def format_bulan_to_string(tanggal: pd.Series) -> str:
-    return f"{tanggal.day} {get_nama_bulan(tanggal.month)} {tanggal.year}"
+    tanggal=pd.to_datetime(tanggal)
+    return f"{tanggal} {get_nama_bulan(tanggal.month)} {tanggal.year}"
 
 
 def format_date_series(s: pd.Series, default_date: bool = False) -> pd.Series:
@@ -160,3 +162,52 @@ def hitung_bulan_vectorized(tahun_series: pd.Series, bulan_series: pd.Series) ->
 
     # Ensure non-negative results
     return result.clip(lower=0)
+
+
+def cleanup_nan_to_zero_safe(data: Union[pd.DataFrame, pd.Series],
+                             columns: Optional[List[str]] = None,
+                             only_numeric: bool = True) -> Union[pd.DataFrame, pd.Series]:
+    """
+    Safely cleanup NaN values to zero, considering data types.
+
+    Parameters:
+    -----------
+    data : pd.DataFrame or pd.Series
+        Data to be cleaned
+    columns : list, optional
+        Specific columns to clean
+    only_numeric : bool, default True
+        If True, only clean numeric columns
+    """
+    if isinstance(data, pd.Series):
+        return _cleanup_series_nan_safe(data, only_numeric)
+    else:
+        return _cleanup_dataframe_nan_safe(data, columns, only_numeric)
+
+
+def _cleanup_series_nan_safe(series: pd.Series, only_numeric: bool = True) -> pd.Series:
+    """Safely clean NaN values in Series."""
+    if only_numeric and not pd.api.types.is_numeric_dtype(series):
+        return series
+    return series.fillna(0)
+
+
+def _cleanup_dataframe_nan_safe(df: pd.DataFrame,
+                                columns: Optional[List[str]] = None,
+                                only_numeric: bool = True) -> pd.DataFrame:
+    """Safely clean NaN values in DataFrame."""
+    result = df.copy()
+
+    if columns is None:
+        columns_to_clean = result.columns
+    else:
+        columns_to_clean = [col for col in columns if col in result.columns]
+
+    for col in columns_to_clean:
+        if only_numeric:
+            if pd.api.types.is_numeric_dtype(result[col]):
+                result[col] = result[col].fillna(0)
+        else:
+            result[col] = result[col].fillna(0)
+
+    return result

@@ -2,8 +2,8 @@ from unittest import TestCase
 
 from icecream import ic
 
-from src.laporan_kepegawaian import fetch_dnp
-from src.laporan_kepegawaian import fetch_dnp_data
+from app.models.dnp import fetch_dnp
+from app.services.dnp import fetch_dnp_data
 
 
 class Test(TestCase):

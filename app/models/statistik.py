@@ -132,7 +132,7 @@ def fetch_by_agama():
           WHERE peg.is_deleted = %s
             AND peg.status_kerja = %s
           GROUP BY bio.agama
-          ORDER BY bio.agama \
+          ORDER BY bio.agama
           """
     where = (False, StatusKerja.KARYAWAN_AKTIF.value)
 
