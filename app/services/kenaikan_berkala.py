@@ -52,6 +52,11 @@ class KenaikanBerkalaService:
         df = self.kbm.fetch(filter_type, jenis_sk)
         return _cleanup_data(df, jenis_sk) if not df.empty else pd.DataFrame()
 
+    def fetch_count(self,
+              filter_type: FilterKenaikanBerkala = FilterKenaikanBerkala.BULAN_INI,
+              jenis_sk: JenisSk = JenisSk.SK_KENAIKAN_GAJI_BERKALA) -> pd.DataFrame:
+        return self.kbm.fetch_count(filter_type, jenis_sk)
+
     def to_excel(self,
                  title_text: str,
                  filter_type: FilterKenaikanBerkala = FilterKenaikanBerkala.BULAN_INI,

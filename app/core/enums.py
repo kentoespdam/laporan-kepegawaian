@@ -9,6 +9,7 @@ class StatusPegawai(Enum):
     HONORER = 4
     NON_PEGAWAI = 5
 
+
 class StatusKerja(Enum):
     BERHENTI_OR_KELUAR = 0
     DIRUMAHKAN = 1
@@ -41,11 +42,13 @@ class JenisSk(Enum):
     SK_PENYESUAIAN_GAJI = 7
     SK_KENAIKAN_GAJI_BERKALA = 8
 
+
 class FilterKenaikanBerkala(Enum):
     BULAN_INI = 0
     GTE_1 = 1
     GTE_2 = 2
     TAHUN_INI = 3
+
 
 class HubunganKeluarga(Enum):
     SUAMI = 0
@@ -55,7 +58,14 @@ class HubunganKeluarga(Enum):
     ANAK = 4
     SAUDARA = 5
 
+
 class StatusPendidikan(Enum):
     BELUM_SEKOLAH = 0
     SEKOLAH = 1
     SELESAI_SEKOLAH = 2
+
+
+class FilterLepasTanggunganAnak(Enum):
+    BULAN_INI = 0
+    GTE_1 = 1
+    GTE_2 = 2

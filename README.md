@@ -5,7 +5,7 @@ cd laporan-kepegawaian
 ```
 # 2. Buat struktur folder
 ```shell
-mkdir -p laporan_kepegawaian/{config,core,models,routes,services,repositories,utils}
+mkdir -p laporan_kepegawaian/{_config,core,models,routes,services,repositories,utils}
 mkdir -p tests/{unit,integration,fixtures}
 mkdir -p templates docs scripts logs
 ```

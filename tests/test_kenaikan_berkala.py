@@ -32,3 +32,10 @@ class TestKenaikanBerkalaModel(TestCase):
         df = self.kbs.fetch(self.filter, self.jenis_sk)
         self.assertFalse(df.empty)
         ic(df.to_dict("records"))
+
+    def test_fetch_count_service(self):
+        count = self.kbm.fetch_count(self.filter, self.jenis_sk)
+        # self.assertGreater(count, 0)
+        ic(count)
+        # self.assertFalse(df.empty)
+        # ic(df.to_dict("records"))

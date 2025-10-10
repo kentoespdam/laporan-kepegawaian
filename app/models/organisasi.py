@@ -1,6 +1,6 @@
 import pandas as pd
 
-from app.core.config import fetch_data
+from app.core.databases import fetch_data
 
 
 def fetch_kode_nama_organisasi(level_org: int = None) -> pd.DataFrame:

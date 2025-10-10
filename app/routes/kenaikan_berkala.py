@@ -27,6 +27,17 @@ def index(filter: str = Query(FilterKenaikanBerkala.BULAN_INI.name,
 
     return JSONResponse(content=data.to_dict("records"), status_code=200)
 
+
+@router.get("/count")
+def get_count(filter: str = Query(FilterKenaikanBerkala.BULAN_INI.name,
+                                  enum=list(filter.name for filter in FilterKenaikanBerkala)),
+              jenis_sk: str = Query(JenisSk.SK_KENAIKAN_GAJI_BERKALA.name,
+                                    enum=["SK_KENAIKAN_GAJI_BERKALA", "SK_KENAIKAN_PANGKAT_GOLONGAN"])):
+    data = KenaikanBerkalaService().fetch_count(FilterKenaikanBerkala[filter], JenisSk[jenis_sk])
+
+    return JSONResponse(content={"count": data}, status_code=200)
+
+
 @router.get("/excel")
 def excel(filter: str = Query(FilterKenaikanBerkala.BULAN_INI.name,
                               enum=list(filter.name for filter in FilterKenaikanBerkala))):

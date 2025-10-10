@@ -1,4 +1,4 @@
-from app.core.config import fetch_data
+from app.core.databases import fetch_data
 from app.core.enums import StatusKerja
 
 
